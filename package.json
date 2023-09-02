@@ -4,11 +4,18 @@
   "main": "dist/app.js",
   "author": "Saikat2050",
   "license": "MIT",
+  "private": false,
   "scripts": {
+    "postinstall": "husky install",
+    "prepack": "pinst --disable",
+    "postpack": "pinst --enable",
     "start": "nodemon app.ts",
     "dev": "rimraf dist && yarn build && nodemon --watch dist --delay 1 dist/app.js",
     "build": "tsc -p tsconfig.json",
-    "serve": "node dist/app.js"
+    "serve": "node dist/app.js",
+    "test": "mocha --require ts-node/register src/test/**/*test.ts",
+    "prettier:list": "prettier \"{src,test}/**/*.{ts,js}\" --list-different",
+    "prettier:fix": "prettier \"{src,test}/**/*.{ts,js}\" --write"
   },
   "devDependencies": {
     "@types/node": "^18.16.9",
@@ -51,6 +58,7 @@
     "morgan": "^1.10.0",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.4",
+    "prettier": "^3.0.3",
     "rimraf": "^5.0.1",
     "rotating-file-stream": "^3.1.1",
     "typescript-json-schema": "^0.60.0"
