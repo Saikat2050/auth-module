@@ -20,7 +20,7 @@ class Validator {
 		res: Response,
 		next: NextFunction
 	) {
-		// const reqUrl: string = req.url
+	// const reqUrl: string = req.url
 		// const typeModule: string[] = reqUrl.split("/")
 		// typeModule.pop()
 		// const schemaModulePath = Object.keys(schemas).find(
