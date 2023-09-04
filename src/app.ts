@@ -1,4 +1,5 @@
 require("dotenv").config()
+import mongoose from "mongoose"
 import express, {Application, Request, Response, NextFunction} from "express"
 import cors from "cors"
 import path from "path"
@@ -113,9 +114,21 @@ app.use("*", ApiMiddlewares.middleware404)
 app.use(ApiMiddlewares.exceptionHandler)
 
 // server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+	// Connect to mongoDB
+	const mongoDB: string = process.env.MONGODB_URI || 'mongodb://localhost:27017/<database>'
+	console.log("mongoDB", mongoDB)
+	try {
+		mongoose.Promise = global.Promise
+		await mongoose.connect(mongoDB)
+	} catch (err) {
+		console.error(err)
+		process.exit()
+	}
+	
+
 	console.log(`Auth API is up and running on ${PORT}`)
 
 	// generate schema
-	// generateSchema()
+	generateSchema()
 })
