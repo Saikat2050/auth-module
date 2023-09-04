@@ -120,7 +120,6 @@ app.listen(PORT, async () => {
 	// Connect to mongoDB
 	const mongoDB: string =
 		process.env.MONGODB_URI || "mongodb://localhost:27017/<database>"
-	console.log("mongoDB", mongoDB)
 	try {
 		mongoose.Promise = global.Promise
 		await mongoose.connect(mongoDB)
@@ -132,5 +131,5 @@ app.listen(PORT, async () => {
 	console.log(`Auth API is up and running on ${PORT}`)
 
 	// generate schema
-	generateSchema()
+	// generateSchema()
 })

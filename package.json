@@ -9,8 +9,8 @@
     "postinstall": "husky install",
     "prepack": "pinst --disable",
     "postpack": "pinst --enable",
-    "start": "nodemon app.ts",
-    "dev": "rimraf dist && yarn build && nodemon --watch dist --delay 1 dist/app.js",
+    "dev": "nodemon src/app.ts",
+    "start": "rimraf dist && yarn build && nodemon --watch dist --delay 1 dist/app.js",
     "build": "tsc -p tsconfig.json",
     "serve": "node dist/app.js",
     "test": "mocha --require ts-node/register src/test/**/*test.ts",
@@ -67,6 +67,7 @@
     "prettier": "^3.0.3",
     "rimraf": "^5.0.1",
     "rotating-file-stream": "^3.1.1",
+    "string-width": "^6.1.0",
     "typescript-json-schema": "^0.60.0"
   }
 }

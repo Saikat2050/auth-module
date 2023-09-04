@@ -5,35 +5,21 @@ import jwt from "jsonwebtoken"
 
 import {Headers} from "../types/common"
 import {
-	VerificationFor,
-	LogInWith,
-	VerificationDetails,
-	CredentialDetails,
 	SignInPayload,
+	RegisterPayload,
+	SignOutPayload,
+	UpdateUserPayload,
+	SendOtpPayload,
 	VerifyOtpPayload,
 	ResetPasswordPayload,
-	CreateCredentialPayload,
-	DecryptData,
-	VerificationTableData,
-	Role,
-	UserData,
-	Hash
+	ListUserPayload,
+	DeleteUserPayload
 } from "../types/auth"
-import {UserShortDetails, CreateDefaultUserPayload} from "../types/users"
-import {
-	CreateClientApiPayload,
-	ClientDetails,
-	AdminUserDetails
-} from "../types/clients"
-import CommonModel from "../models/CommonModel"
-import CustomModel from "../models/CustomModel"
-import helper, {
-	generateOtp,
-	sendSMS,
-	sendOtpToEmail,
-	decryptBycrypto
-} from "../helpers/helper"
+import {UserDetails, UserTableData} from "../types/users"
+import helper, {generateOtp, sendSMS, decryptBycrypto} from "../helpers/helper"
 import {BadRequestException, UnauthorizedException} from "../lib/exceptions"
+import {ApiResponse} from "../helpers/ApiResponse"
+import errorData from "../constants/errorData.json"
 
 class AuthController {
 	private commonModel
@@ -49,92 +35,58 @@ class AuthController {
 	private clientIdColumn: string = "clientId"
 
 	constructor() {
-		this.commonModel = new CommonModel("userDetails", this.idColumn, [
-			"firstName",
-			"middleName",
-			"lastName",
-			"gender",
-			"city",
-			"state",
-			"country",
-			"postal",
-			"email",
-			"mobile"
-		])
-		this.authCredentialModel = new CommonModel(
-			"authCredential",
-			this.authCredentialIdColumn,
-			[]
-		)
-		this.verificationCommonModel = new CommonModel(
-			"verification",
-			this.verificationIdColumn,
-			[]
-		)
-		this.loginHistoriesModel = new CommonModel(
-			"logInHistories",
-			this.loginHistoriesIdColumn,
-			[]
-		)
-		this.clientModel = new CommonModel(
-			"clientDetails",
-			this.clientIdColumn,
-			[]
-		)
-		this.customModel = new CustomModel(
-			"clientDetails",
-			this.clientIdColumn,
-			[]
-		)
-
 		this.register = this.register.bind(this)
-		this.sendOtpWithHash = this.sendOtpWithHash.bind(this)
-		this.verifyingByHashOtp = this.verifyingByHashOtp.bind(this)
+		this.sendOtp = this.sendOtp.bind(this)
+		this.verifyOtp = this.verifyOtp.bind(this)
 		this.resetPassword = this.resetPassword.bind(this)
 		this.signIn = this.signIn.bind(this)
-		this.loginAs = this.loginAs.bind(this)
+		this.signOut = this.signOut.bind(this)
+		this.updateUser = this.updateUser.bind(this)
+		this.listUser = this.listUser.bind(this)
+		this.deleteUser = this.deleteUser.bind(this)
 		this.refreshToken = this.refreshToken.bind(this)
 	}
 
 	public async register(req: Request, res: Response, next: NextFunction) {
 		try {
-			let inputData: CreateClientApiPayload = req.body
+			const Response = new ApiResponse(res)
+			let inputData: RegisterPayload = req.body
 
-			const [
-				isValidEmail,
-				isValidPhone,
-				isValidPassword,
-				isUserEmailValid
-			]: [boolean, boolean, boolean, boolean] = await Promise.all([
+			const [isValidEmail, isValidPhone, isValidPassword]: [
+				boolean,
+				boolean,
+				boolean
+			] = await Promise.all([
 				// email validation
 				helper.regexEmail(inputData.email),
 
 				// phone validation
-				inputData.phone ? helper.regexMobile(inputData.phone) : false,
-
-				// user email validation
-				helper.regexEmail(inputData.userDetails.email),
+				inputData.mobile ? helper.regexMobile(inputData.mobile) : false,
 
 				// password validation
-				helper.regexPassword(inputData.userDetails.password)
+				helper.regexPassword(inputData.password)
 			])
+
 			if (!isValidEmail) {
-				throw new BadRequestException("Email not valid!")
+				return Response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "Email not valid"
+				})
 			}
-			if (inputData.phone && !isValidPhone) {
-				throw new BadRequestException("Phone number not valid!")
-			}
-			if (!isUserEmailValid) {
-				throw new BadRequestException("User email not valid!")
+			if (inputData.mobile && !isValidPhone) {
+				return Response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "Phone number not valid"
+				})
 			}
 			if (!isValidPassword) {
-				throw new BadRequestException(
-					"Password must be more then 8 char!"
-				)
+				return Response.errorResponse({
+					...errorData.BAD_REQUEST,
+					message: "Password must be more then 8 char"
+				})
 			}
 
-			const [emailExists, phoneExists, userExists]: [
-				ClientDetails[],
+			const [phoneExists, userExists]: [
 				ClientDetails[],
 				AdminUserDetails[]
 			] = await Promise.all([
@@ -305,77 +257,7 @@ class AuthController {
 		}
 	}
 
-	public async sendOtpWithHash(
-		req: Request,
-		res: Response,
-		next: NextFunction
-	) {
-		try {
-			const {hash}: Hash = req.body
-
-			// decrypt hash
-			const decryptData: DecryptData = await decryptBycrypto(hash)
-			const {email, userId}: DecryptData = decryptData
-
-			// check if user exists
-			const [userDetails]: UserShortDetails[] =
-				await this.commonModel.list({
-					userId
-				})
-			if (!userDetails) {
-				throw new UnauthorizedException("User not found")
-			}
-
-			// generate otp
-			const otp: number = await generateOtp()
-
-			// create encryption
-			const encryptedOtp: string = jwt.sign(
-				{otp},
-				process.env.JWT_SECRET_KEY as string
-			)
-
-			// delete existing non-verified entries
-			await this.verificationCommonModel.softDeleteByFilter(
-				{
-					value: email,
-					isVerified: false
-				},
-				userId
-			)
-
-			await this.verificationCommonModel.bulkCreate([
-				{
-					verificationType: LogInWith.EMAIL,
-					value: email,
-					isVerified: false,
-					verificationFor: VerificationFor.AUTH,
-					otp: encryptedOtp
-				}
-			])
-
-			// send otp to email
-			await sendOtpToEmail(email, otp, userDetails.firstName)
-
-			return res.json({
-				success: true,
-				message: `OTP sent successfully`
-			})
-		} catch (error) {
-			res.status(400).json({
-				status: 400,
-				message: error?.toString(),
-				code: "unexpected_error"
-			})
-			return
-		}
-	}
-
-	public async verifyingByHashOtp(
-		req: Request,
-		res: Response,
-		next: NextFunction
-	) {
+	public async verifyOtp(req: Request, res: Response, next: NextFunction) {
 		try {
 			const {hash, otp}: {hash: string; otp: number} = req.body
 			const decryptData: DecryptData = await decryptBycrypto(hash)
@@ -731,6 +613,54 @@ class AuthController {
 				token
 			})
 		} catch (error) {
+			res.status(400).json({
+				status: 400,
+				message: error?.toString(),
+				code: "unexpected_error"
+			})
+			return
+		}
+	}
+
+	public async signOut(req: Request, res: Response, next: NextFunction) {
+		try {
+		} catch (err) {
+			res.status(400).json({
+				status: 400,
+				message: error?.toString(),
+				code: "unexpected_error"
+			})
+			return
+		}
+	}
+
+	public async updateUser(req: Request, res: Response, next: NextFunction) {
+		try {
+		} catch (err) {
+			res.status(400).json({
+				status: 400,
+				message: error?.toString(),
+				code: "unexpected_error"
+			})
+			return
+		}
+	}
+
+	public async listUser(req: Request, res: Response, next: NextFunction) {
+		try {
+		} catch (err) {
+			res.status(400).json({
+				status: 400,
+				message: error?.toString(),
+				code: "unexpected_error"
+			})
+			return
+		}
+	}
+
+	public async deleteUser(req: Request, res: Response, next: NextFunction) {
+		try {
+		} catch (err) {
 			res.status(400).json({
 				status: 400,
 				message: error?.toString(),

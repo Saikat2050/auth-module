@@ -10,16 +10,11 @@ import Crypto from "crypto"
 export default {
 	generateOtp,
 	sendSMS,
-	sendOtpToEmail,
-	sendVerificationEmail,
 	regexEmail,
 	regexDob,
 	regexMobile,
 	regexPassword,
 	listFunction,
-	getActionByClientPromptActionId,
-	getActiveEmailProvider,
-	sendNotificationWithActionAndConfig,
 	encryptionByCrypto,
 	decryptBycrypto
 }
