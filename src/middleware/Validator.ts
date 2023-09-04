@@ -48,7 +48,11 @@ class Validator {
 		next()
 	}
 
-	public async validateToken(req: Request, res: Response, next: NextFunction) {
+	public async validateToken(
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) {
 		try {
 			// const reqUrl: string = req.url
 			// const reqMethod: string = req.method

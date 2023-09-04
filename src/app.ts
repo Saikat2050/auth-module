@@ -30,7 +30,9 @@ if (
 	!process.env.ENVIRONMENT ||
 	!SUPPORTED_ENVS.includes(process.env.ENVIRONMENT)
 ) {
-	const supported = SUPPORTED_ENVS.map((env) => JSON.stringify(env)).join(", ")
+	const supported = SUPPORTED_ENVS.map((env) => JSON.stringify(env)).join(
+		", "
+	)
 
 	console.log(
 		`ENVIRONMENT=${process.env.ENVIRONMENT} is not supported. Supported values: ${supported}`
@@ -116,7 +118,8 @@ app.use(ApiMiddlewares.exceptionHandler)
 // server
 app.listen(PORT, async () => {
 	// Connect to mongoDB
-	const mongoDB: string = process.env.MONGODB_URI || 'mongodb://localhost:27017/<database>'
+	const mongoDB: string =
+		process.env.MONGODB_URI || "mongodb://localhost:27017/<database>"
 	console.log("mongoDB", mongoDB)
 	try {
 		mongoose.Promise = global.Promise
@@ -125,7 +128,6 @@ app.listen(PORT, async () => {
 		console.error(err)
 		process.exit()
 	}
-	
 
 	console.log(`Auth API is up and running on ${PORT}`)
 

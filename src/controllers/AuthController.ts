@@ -76,8 +76,16 @@ class AuthController {
 			this.loginHistoriesIdColumn,
 			[]
 		)
-		this.clientModel = new CommonModel("clientDetails", this.clientIdColumn, [])
-		this.customModel = new CustomModel("clientDetails", this.clientIdColumn, [])
+		this.clientModel = new CommonModel(
+			"clientDetails",
+			this.clientIdColumn,
+			[]
+		)
+		this.customModel = new CustomModel(
+			"clientDetails",
+			this.clientIdColumn,
+			[]
+		)
 
 		this.register = this.register.bind(this)
 		this.sendOtpWithHash = this.sendOtpWithHash.bind(this)
@@ -92,12 +100,12 @@ class AuthController {
 		try {
 			let inputData: CreateClientApiPayload = req.body
 
-			const [isValidEmail, isValidPhone, isValidPassword, isUserEmailValid]: [
-				boolean,
-				boolean,
-				boolean,
-				boolean
-			] = await Promise.all([
+			const [
+				isValidEmail,
+				isValidPhone,
+				isValidPassword,
+				isUserEmailValid
+			]: [boolean, boolean, boolean, boolean] = await Promise.all([
 				// email validation
 				helper.regexEmail(inputData.email),
 
@@ -120,7 +128,9 @@ class AuthController {
 				throw new BadRequestException("User email not valid!")
 			}
 			if (!isValidPassword) {
-				throw new BadRequestException("Password must be more then 8 char!")
+				throw new BadRequestException(
+					"Password must be more then 8 char!"
+				)
 			}
 
 			const [emailExists, phoneExists, userExists]: [
@@ -171,9 +181,8 @@ class AuthController {
 				email: userDetails.email
 			}
 
-			const [user]: UserShortDetails[] = await this.commonModel.bulkCreate([
-				userPayload
-			])
+			const [user]: UserShortDetails[] =
+				await this.commonModel.bulkCreate([userPayload])
 
 			// create auth details
 			const authCredentials: CreateCredentialPayload[] = [
@@ -197,7 +206,9 @@ class AuthController {
 			await helper.sendVerificationEmail(
 				user.email,
 				link,
-				`${user.firstName} ${user.middleName ?? ""} ${user.lastName ?? ""}`
+				`${user.firstName} ${user.middleName ?? ""} ${
+					user.lastName ?? ""
+				}`
 			)
 
 			return res.json({
@@ -260,9 +271,10 @@ class AuthController {
 			}
 
 			// get first name of the user
-			const [userDetails]: UserShortDetails[] = await this.commonModel.list({
-				userId: authCredential.userId
-			})
+			const [userDetails]: UserShortDetails[] =
+				await this.commonModel.list({
+					userId: authCredential.userId
+				})
 			if (!userDetails) {
 				throw new UnauthorizedException("User not found")
 			}
@@ -306,9 +318,10 @@ class AuthController {
 			const {email, userId}: DecryptData = decryptData
 
 			// check if user exists
-			const [userDetails]: UserShortDetails[] = await this.commonModel.list({
-				userId
-			})
+			const [userDetails]: UserShortDetails[] =
+				await this.commonModel.list({
+					userId
+				})
 			if (!userDetails) {
 				throw new UnauthorizedException("User not found")
 			}
@@ -400,7 +413,10 @@ class AuthController {
 			if (
 				new Date(
 					new Date(verificationData.createdAt.toString()).getTime() +
-						parseInt(process.env.OTP_EXPIRATION_IN_MINUTES as string) * 60000
+						parseInt(
+							process.env.OTP_EXPIRATION_IN_MINUTES as string
+						) *
+							60000
 				).getTime() < new Date().getTime()
 			) {
 				throw new UnauthorizedException(
@@ -428,12 +444,17 @@ class AuthController {
 		}
 	}
 
-	public async resetPassword(req: Request, res: Response, next: NextFunction) {
+	public async resetPassword(
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) {
 		try {
 			let {hash, otp, password}: ResetPasswordPayload = req.body
 
 			// encrypt password
-			const isValidPassword: boolean = await helper.regexPassword(password)
+			const isValidPassword: boolean =
+				await helper.regexPassword(password)
 			if (!isValidPassword) {
 				throw new BadRequestException(
 					"Password must be more then 8 char!",
@@ -494,7 +515,10 @@ class AuthController {
 			if (
 				new Date(
 					new Date(verificationData.createdAt.toString()).getTime() +
-						parseInt(process.env.OTP_EXPIRATION_IN_MINUTES as string) * 60000
+						parseInt(
+							process.env.OTP_EXPIRATION_IN_MINUTES as string
+						) *
+							60000
 				).getTime() < new Date().getTime()
 			) {
 				throw new UnauthorizedException(
@@ -510,7 +534,10 @@ class AuthController {
 				),
 
 				// update password
-				this.authCredentialModel.update({password}, authCredential.credentialId)
+				this.authCredentialModel.update(
+					{password},
+					authCredential.credentialId
+				)
 			])
 
 			return res.json({
@@ -611,7 +638,8 @@ class AuthController {
 		try {
 			const {clientId}: Headers = req.body
 
-			const [userData]: UserData = await this.customModel.loginAs(clientId)
+			const [userData]: UserData =
+				await this.customModel.loginAs(clientId)
 
 			await Promise.all([
 				// update lastActiveOn
