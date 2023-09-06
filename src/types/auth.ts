@@ -34,7 +34,7 @@ export type UpdateUserPayload = {
 	userId: string
 	name?: string
 	email?: {
-		email: string,
+		email: string
 		password: string
 	}
 	mobile?: string

@@ -1,5 +1,5 @@
 import schemas from "../schemas/schemas.json"
-import { resolve, join } from "path"
+import {resolve, join} from "path"
 import * as TJS from "typescript-json-schema"
 import fs from "fs"
 import path from "path"
@@ -33,7 +33,9 @@ export async function generateSchema() {
 	}
 
 	for (let i = 0; i < schemas.length; i++) {
-		const schemaPath: string = path.resolve(__dirname + `./../${schemas[i].source}.${fileType}`)
+		const schemaPath: string = path.resolve(
+			__dirname + `./../${schemas[i].source}.${fileType}`
+		)
 		const hash: string = await generateCacheBasedSchema(schemaPath)
 
 		if (
@@ -41,7 +43,8 @@ export async function generateSchema() {
 			cacheBasedSchema[`${schemas[i].basePath}`].hash === hash
 		) {
 			console.log(`using hash ${hash} for schemaPath`, schemaPath)
-			schemaArr[`${schemas[i].basePath}`] = cacheBasedSchema[`${schemas[i].basePath}`]
+			schemaArr[`${schemas[i].basePath}`] =
+				cacheBasedSchema[`${schemas[i].basePath}`]
 			continue
 		}
 
@@ -103,7 +106,9 @@ export async function generateSchema() {
 			for (let j = 0; j < pathArr.length; j++) {
 				// @ts-ignore
 				// schemaArr.push(schema[pathArr[j]])
-				schemaArr[`${schemas[i].basePath}`].schemas[`${schemas[i].schemas[k].apiPath}`] = schema[pathArr[j]]
+				schemaArr[`${schemas[i].basePath}`].schemas[
+					`${schemas[i].schemas[k].apiPath}`
+				] = schema[pathArr[j]]
 			}
 		}
 		console.log(`ended schemaPath`, schemaPath)
