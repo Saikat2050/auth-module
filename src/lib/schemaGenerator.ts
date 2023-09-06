@@ -1,20 +1,50 @@
 import schemas from "../schemas/schemas.json"
-import {resolve, join} from "path"
+import { resolve, join } from "path"
 import * as TJS from "typescript-json-schema"
 import fs from "fs"
 import path from "path"
+import crypto from "crypto"
 
 export default {
 	generateSchema
 }
 
+const fileType = path.basename(__filename).toString().split(".").pop()
+const cacheBasePath = join(__dirname, "../../schema/cache.json")
+let cacheBasedSchema = {}
+
+const generateCacheBasedSchema = async (filePath: string) => {
+	const content = fs.readFileSync(resolve(filePath))
+
+	return crypto.createHash("sha1").update(content).digest("hex")
+}
+
 export async function generateSchema() {
 	const schemaArr: any = {}
 
+	// Manipulate Cache Schemas
+	if (fs.existsSync(cacheBasePath)) {
+		const fileContent = fs.readFileSync(cacheBasePath).toString()
+		cacheBasedSchema = JSON.parse(fileContent)
+	} else {
+		fs.mkdirSync(cacheBasePath, {recursive: true})
+		const fileContent = JSON.stringify(cacheBasedSchema, null, 2)
+		fs.writeFileSync(cacheBasePath, fileContent)
+	}
+
 	for (let i = 0; i < schemas.length; i++) {
-		const schemaPath: string = path.resolve(
-			__dirname + `./../${schemas[i].source}`
-		)
+		const schemaPath: string = path.resolve(__dirname + `./../${schemas[i].source}.${fileType}`)
+		const hash: string = await generateCacheBasedSchema(schemaPath)
+
+		if (
+			cacheBasedSchema[`${schemas[i].basePath}`] &&
+			cacheBasedSchema[`${schemas[i].basePath}`].hash === hash
+		) {
+			console.log(`using hash ${hash} for schemaPath`, schemaPath)
+			schemaArr[`${schemas[i].basePath}`] = cacheBasedSchema[`${schemas[i].basePath}`]
+			continue
+		}
+
 		console.log(`started schemaPath`, schemaPath)
 
 		// optionally pass argument to schema generator
@@ -36,6 +66,7 @@ export async function generateSchema() {
 		const generator = TJS.buildGenerator(program, settings)
 
 		schemaArr[`${schemas[i].basePath}`] = {
+			hash,
 			schemas: {}
 		}
 
@@ -58,10 +89,11 @@ export async function generateSchema() {
 			// special case for file upload
 			if (schema) {
 				Object.keys(schema).forEach((entry) => {
-					// @ts-ignore
-					if (schema[entry]["properties"]["file"]) {
-						// @ts-ignore
-						schema[entry]["additionalProperties"] = true
+					if (
+						schema[`${entry}`]["properties"] &&
+						schema[`${entry}`]["properties"]["file"]
+					) {
+						schema[`${entry}`]["additionalProperties"] = true
 					}
 				})
 			}
@@ -71,17 +103,13 @@ export async function generateSchema() {
 			for (let j = 0; j < pathArr.length; j++) {
 				// @ts-ignore
 				// schemaArr.push(schema[pathArr[j]])
-				schemaArr[`${schemas[i].basePath}`].schemas[
-					`${schemas[i].schemas[k].apiPath}`
-				] = schema[pathArr[j]]
+				schemaArr[`${schemas[i].basePath}`].schemas[`${schemas[i].schemas[k].apiPath}`] = schema[pathArr[j]]
 			}
 		}
 		console.log(`ended schemaPath`, schemaPath)
 	}
 
-	const schemaDirectory = join(__dirname, "../schema/cache.json")
-	fs.existsSync(schemaDirectory) ||
-		fs.mkdirSync(schemaDirectory, {recursive: true})
+	let schemaDirectory = cacheBasePath
 	const content = JSON.stringify(schemaArr, null, 2)
 
 	fs.writeFileSync(schemaDirectory, content)
