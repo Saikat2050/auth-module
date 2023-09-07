@@ -57,7 +57,8 @@ export type VerifyOtpPayload = {
 
 export type ResetPasswordPayload = {
 	email: string
-	value: string
+	hash: string
+	otp: string
 	password: string
 }
 

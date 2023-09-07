@@ -9,7 +9,6 @@ class ApiMiddleware {
 		res: Response,
 		next: NextFunction
 	) {
-		console.log("Middleware Error Hadnling")
 		const errStatus = err.statusCode || 422
 		const errMsg = err.message || "Something went wrong"
 		const errCode = err.errorCode || "internal_server_error"
@@ -18,8 +17,7 @@ class ApiMiddleware {
 			success: false,
 			statusCode: errStatus,
 			message: errMsg,
-			errorCode: errCode,
-			stack: process.env.NODE_ENV === "development" ? err.stack : {}
+			errorCode: errCode
 		})
 	}
 
