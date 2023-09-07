@@ -42,8 +42,10 @@ export async function generateSchema() {
 			cacheBasedSchema[`${schemas[i].basePath}`] &&
 			cacheBasedSchema[`${schemas[i].basePath}`].hash === hash
 		) {
-		
-			eventEmitter.emit("logging", `using hash ${hash} for schemaPath ${schemaPath}`)
+			eventEmitter.emit(
+				"logging",
+				`using hash ${hash} for schemaPath ${schemaPath}`
+			)
 			schemaArr[`${schemas[i].basePath}`] =
 				cacheBasedSchema[`${schemas[i].basePath}`]
 			continue

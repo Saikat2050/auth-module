@@ -7,7 +7,6 @@ import User from "../models/users"
 const schemas = require("../../schema/cache.json")
 import publicApi from "../schemas/publicRoutes.json"
 
-
 const ajv = new Ajv()
 
 class Validator {

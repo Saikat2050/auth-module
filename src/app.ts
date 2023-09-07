@@ -55,7 +55,10 @@ if (
 		", "
 	)
 
-	eventEmitter.emit("logging", `ENVIRONMENT = ${process.env.ENVIRONMENT} is not supported. Supported values: ${supported}`)
+	eventEmitter.emit(
+		"logging",
+		`ENVIRONMENT = ${process.env.ENVIRONMENT} is not supported. Supported values: ${supported}`
+	)
 
 	process.exit()
 }
