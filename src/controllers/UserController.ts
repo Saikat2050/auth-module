@@ -1,16 +1,10 @@
 import {Request, Response, NextFunction} from "express"
 import User from "../models/users"
 
-import {
-	UpdateUserPayload,
-	ListUserPayload,
-	DeleteUserPayload
-} from "../types/auth"
-import {UserDetails, UserUpdatePayload} from "../types/users"
-import helper, {generateOtp, sendSMS, decryptBycrypto} from "../helpers/helper"
+import errorData from "../constants/errorData.json"
+
+import {UserDetails, UserShortDetails, UserUpdatePayload} from "../types/users"
 import {ApiResponse} from "../helpers/ApiResponse"
-import { BadRequestException } from "../lib/exceptions"
-// import errorData from "../constants/errorData.json"
 
 class AuthController {
 	constructor() {
@@ -25,13 +19,13 @@ class AuthController {
 			const response = new ApiResponse(res)
 			const inputData: UserUpdatePayload = req.body
 
-			const listUserData = await User.findOne({userId: inputData.userId})
+			const listUserData = await User.findById({userId: inputData.userId})
 			if (!listUserData) {
 				throw new Error("User not found")
 			}
-
+		
 		// update  
-		const data = await User.updateOne({userId: inputData.userId} , {$set: inputData})
+		const data = await User.findByIdAndUpdate({userId: inputData.userId} , {$set: inputData, $isVerified: false})
 		return response.successResponse({
 			message : "User updated successfully",
 			data
@@ -44,7 +38,7 @@ class AuthController {
 	public async list(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const data = await User.findOne({})
+			const data: UserShortDetails | null = await User.find().sort().limit(20)
 
 			return response.successResponse({
 				message: "",
@@ -61,15 +55,18 @@ class AuthController {
 			const userId: string = req.body.userId
 
 			// check if user exist
-			const userDetails: UserDetails[] | null = await User.findOne({userId})
+			const userDetails: UserDetails[] | null = await User.findById({userId})
 
 			if (!userDetails?.length) {
-				throw new BadRequestException("user details not found")
+				return response.errorResponse({
+					...errorData.ALREADY_EXISTS,
+					message: "user details not found"
+				})
 			}
 
 			// delete
-			await User.findOneAndUpdate	(
-				{ _id: userId },
+			await User.findByIdAndUpdate(
+				{ userId: userId },
 				{ deleted: true },
 				{ new: true }
 			)

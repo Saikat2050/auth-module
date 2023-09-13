@@ -1,26 +1,22 @@
-import {Request, Response, NextFunction, response} from "express"
+import {Request, Response, NextFunction} from "express"
 import moment from "moment"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import User from "../models/users"
 
-import {Headers} from "../types/common"
 import {
 	SignInPayload,
-	RegisterPayload,
-	SignOutPayload,
-	UpdateUserPayload,
+	RegisterPayload,	
 	SendOtpPayload,
 	VerifyOtpPayload,
 	ResetPasswordPayload,
-	ListUserPayload,
-	DeleteUserPayload
+	sendOtpPayload,
+	verifyOtpPayload
 } from "../types/auth"
-import {UserDetails} from "../types/users"
+import {UserCreateApiPayload, UserDetails, UserShortDetails} from "../types/users"
 import helper, { decryptBycrypto} from "../helpers/helper"
 import {ApiResponse} from "../helpers/ApiResponse"
 import errorData from "../constants/errorData.json"
-import { BadRequestException, UnauthorizedException } from "../lib/exceptions"
 
 class AuthController {
 	constructor() {
@@ -71,19 +67,19 @@ class AuthController {
 				})
 			}
 
-			const [phoneExists, userExists] = await Promise.all([
+			const [phoneExists, userExists]: [boolean, boolean] = await Promise.all([
 				inputData.mobile
-					? User.findOne({
+					? User.findOne({ //i have checked with mongo find does exist if you don't 
 							mobile: inputData.mobile,
 							isDeleted: false
 					  })
 					: [],
-				User.findOne({
+					User.findOne({
 					email: inputData.email,
 					isDeleted: false
 				})
 			])
-			if (inputData.mobile && phoneExists) {
+			if (phoneExists && phoneExists) {
 				return response.errorResponse({
 					...errorData.ALREADY_EXISTS,
 					message: "Phone number already exists"
@@ -102,7 +98,7 @@ class AuthController {
 				parseInt(process.env.SALT_ROUNDS as string)
 			)
 
-			const data = await User.create(inputData)
+			const data: UserCreateApiPayload[] = await User.create(inputData)
 
 			return response.successResponse({
 				message: "User created successfully",
@@ -130,12 +126,12 @@ class AuthController {
 				})
 			}
 
-			// send otp to email
-			await sendOtpToEmail(
-				authCredential.userName,
-				otp,
-				userDetails.firstName
-			)
+			// // send otp to email
+			// await sendOtpToEmail(
+			// 	authCredential.userName,
+			// 	otp,
+			// 	userDetails.firstName
+			// )
 
 			return response.successResponse({
 				message: `OTP sent successfully`
@@ -148,10 +144,21 @@ class AuthController {
 	public async verifyOtp(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const {hash, otp}: {hash: string; otp: number} = req.body
-			const decryptData: DecryptData = await decryptBycrypto(hash)
-			const {email, userId}: DecryptData = decryptData
+			const {email, otp}: verifyOtpPayload = req.body
+			
 			// check if otp is valid
+			const userExists: UserDetails | null = await User.findOne({
+				email,
+				secretCode: await decryptBycrypto(otp),
+				isDeleted: false,
+				isActive: true
+			})
+			if (!userExists) {
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "User not found"
+				})
+			}
 			
 			return response.successResponse({
 				message: `OTP verified successfully`
@@ -168,23 +175,22 @@ class AuthController {
 	) {
 		try {
 			const response = new ApiResponse(res)
-			let {hash, otp, password}: ResetPasswordPayload = req.body
+			const {email, otp, password}: ResetPasswordPayload = req.body
 			// encrypt password
 			const isValidPassword: boolean =
 				await helper.regexPassword(password)
 			if (!isValidPassword) {
-				throw new BadRequestException(
-					"Password must be more then 8 char!",
-					"validation_error"
-				)
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "Password must be more then 8 char"
+				})
 			}
-			password = await bcrypt.hash(
+			const encryptPassword: string = await bcrypt.hash(
 				password,
 				parseInt(process.env.SALT_ROUNDS as string)
 			)
-			const decryptData = await decryptBycrypto(hash)
-			const {email, userId} = decryptData
-			const listUserData = await User.findOne({email})
+
+			const listUserData: UserShortDetails| null = await User.findOne({email, secretCode: otp})
 			if (!listUserData) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
@@ -193,20 +199,24 @@ class AuthController {
 			}
 			if (
 				new Date(
-					new Date(listUserData.createdAt.toString()).getTime() +
+					new Date(listUserData?.createdAt.toString()).getTime() +
 						parseInt(
 							process.env.OTP_EXPIRATION_IN_MINUTES as string
 						) *
 							60000
 				).getTime() < new Date().getTime()
 			) {
-				throw new UnauthorizedException(
-					"OTP expired. Please resend and try again."
-				)
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "OTP expired. Please resend and try again"
+				})
 			}
+			// check secret key will we receive secret key??
 
-			await User.findByIdAndUpdate(userId, {
-				password
+			// update data 
+			await User.findByIdAndUpdate(listUserData.userId, {
+				password: encryptPassword,
+				isVerified:false
 			})
 			
 			return response.successResponse({
@@ -284,7 +294,7 @@ class AuthController {
 			if (!accessToken) {
 				return response.errorResponse({
 					statusCode: 401,
-					message: "Not a valid access token"
+					message: "Missing authorize header"
 				})
 			}
 
