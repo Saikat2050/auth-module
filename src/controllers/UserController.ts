@@ -3,7 +3,7 @@ import User from "../models/users"
 
 import errorData from "../constants/errorData.json"
 
-import {UserDetails, UserShortDetails, UserUpdatePayload} from "../types/users"
+import {UserDetails, UserUpdatePayload} from "../types/users"
 import {ApiResponse} from "../helpers/ApiResponse"
 
 class AuthController {
@@ -19,13 +19,13 @@ class AuthController {
 			const response = new ApiResponse(res)
 			const inputData: UserUpdatePayload = req.body
 
-			const listUserData = await User.findById({userId: inputData.userId})
+			const listUserData = await User.findById({_id: inputData.userId})
 			if (!listUserData) {
 				throw new Error("User not found")
 			}
 		
 		// update  
-		const data = await User.findByIdAndUpdate({userId: inputData.userId} , {$set: inputData, $isVerified: false})
+		const data: UserDetails|null = await User.findByIdAndUpdate({_id: inputData.userId} , {$set: {...inputData, isVerified: false}})
 		return response.successResponse({
 			message : "User updated successfully",
 			data
@@ -38,7 +38,7 @@ class AuthController {
 	public async list(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const data: UserShortDetails | null = await User.find().sort().limit(20)
+			const data: UserDetails = await User.find().sort().limit(20)
 
 			return response.successResponse({
 				message: "",
@@ -52,10 +52,10 @@ class AuthController {
 	public async delete(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const userId: string = req.body.userId
+			const userId: string = req.body._id
 
 			// check if user exist
-			const userDetails: UserDetails[] | null = await User.findById({userId})
+			const userDetails: UserDetails[] | null = await User.findById({_id: userId})
 
 			if (!userDetails?.length) {
 				return response.errorResponse({
@@ -66,7 +66,7 @@ class AuthController {
 
 			// delete
 			await User.findByIdAndUpdate(
-				{ userId: userId },
+				{ _id: userId },
 				{ deleted: true },
 				{ new: true }
 			)

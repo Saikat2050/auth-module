@@ -14,7 +14,7 @@ import {
 	verifyOtpPayload
 } from "../types/auth"
 import {UserCreateApiPayload, UserDetails, UserShortDetails} from "../types/users"
-import helper, { decryptBycrypto} from "../helpers/helper"
+import helper, { decryptBycrypto, encryptionByCrypto} from "../helpers/helper"
 import {ApiResponse} from "../helpers/ApiResponse"
 import errorData from "../constants/errorData.json"
 
@@ -98,7 +98,7 @@ class AuthController {
 				parseInt(process.env.SALT_ROUNDS as string)
 			)
 
-			const data: UserCreateApiPayload[] = await User.create(inputData)
+			const data: UserCreateApiPayload | null = await User.create(inputData)
 
 			return response.successResponse({
 				message: "User created successfully",
@@ -125,6 +125,10 @@ class AuthController {
 					message: "User not found"
 				})
 			}
+			const otpRandom: number =  Math.floor(1000 + Math.random() * 9000)
+			await User.updateOne({
+				secrectCode: await decryptBycrypto(otpRandom.toString())
+			})
 
 			// // send otp to email
 			// await sendOtpToEmail(
@@ -149,7 +153,7 @@ class AuthController {
 			// check if otp is valid
 			const userExists: UserDetails | null = await User.findOne({
 				email,
-				secretCode: await decryptBycrypto(otp),
+				secretCode: await encryptionByCrypto(otp),
 				isDeleted: false,
 				isActive: true
 			})
@@ -190,13 +194,22 @@ class AuthController {
 				parseInt(process.env.SALT_ROUNDS as string)
 			)
 
-			const listUserData: UserShortDetails| null = await User.findOne({email, secretCode: otp})
+			const listUserData: UserShortDetails | null = await User.findOne({email})
 			if (!listUserData) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "User not found"
 				})
 			}
+
+			const hashPass: boolean = await bcrypt.compare(otp, encryptPassword)
+			if (!hashPass) {
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "User not found"
+				})
+			}
+
 			if (
 				new Date(
 					new Date(listUserData?.createdAt.toString()).getTime() +
