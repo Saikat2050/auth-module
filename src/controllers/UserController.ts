@@ -47,7 +47,7 @@ class AuthController {
 		} catch (error) {
 			next(error)
 		}
-	}
+	}		
 
 	public async delete(req: Request, res: Response, next: NextFunction) {
 		try {
