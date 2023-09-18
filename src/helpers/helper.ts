@@ -6,6 +6,17 @@ import jwt from "jsonwebtoken"
 import path from "path"
 import Crypto from "crypto"
 
+const transporter = nodemailer.createTransport({
+	service: "gmail",
+	host: "smtp.gmail.com",
+	port: 587,
+	secure: false,
+	auth: {
+	  user: "MAILID@gmail.com",
+	  pass: "YOUR PASSWORD",
+	},
+  });
+
 /* load models */
 export default {
 	generateOtp,
@@ -48,90 +59,7 @@ export async function sendOtpToEmail(
 //     otp,
 //   };
 
-//   sendMailByMailjet(configuration);
-}
-
-// export async function sendVerificationEmail(
-//   email: string,
-//   link: string,
-//   firstName: string
-// ) {
-//   // need to pass the email
-//   const notificationData: ActiveNotificationService | null =
-//     await getActiveEmailProvider();
-//   if (!notificationData) {
-//     throw "No active email found";
-//   }
-
-//   const configuration = {
-//     email: [email],
-//     from: notificationData.configuration?.from,
-//     publicKey: notificationData.configuration?.publicKey,
-//     privateKey: notificationData.configuration?.privateKey,
-//     subject: "Verify your email",
-//     fileName: "verification.ejs",
-//     firstNameR: firstName,
-//     link,
-//   };
-
-//   sendMailByMailjet(configuration);
-// }
-
-export async function regexEmail(email: string) {
-	const emailRegex = new RegExp(
-		/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
-	)
-	const isValidEmail: boolean = emailRegex.test(email)
-	return isValidEmail
-}
-
-export async function regexMobile(mobile: string) {
-	const phoneRegex = new RegExp(/^[6789]\d{9}$/)
-	const isValidPhone: boolean = phoneRegex.test(mobile)
-	return isValidPhone
-}
-
-export async function regexDob(dob: string) {
-	const dobRegex = new RegExp(/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/)
-	const isValidDob: boolean = dobRegex.test(dob)
-	return isValidDob
-}
-
-export async function regexPassword(password: string) {
-	const clientSecretRegex = new RegExp(/[A-Za-z0-9]{8}/)
-	const isValidPassword: boolean = clientSecretRegex.test(password)
-	return isValidPassword
-}
-
-export async function listFunction(inputData: any) {
-	inputData.filter =
-		[undefined, null].indexOf(inputData.filter) < 0
-			? typeof inputData.filter === "string"
-				? JSON.parse(inputData.filter)
-				: inputData.filter
-			: null
-	inputData.range =
-		[undefined, null].indexOf(inputData.range) < 0
-			? typeof inputData.range === "string"
-				? JSON.parse(inputData.range)
-				: inputData.range
-			: null
-	inputData.sort =
-		[undefined, null].indexOf(inputData.sort) < 0
-			? typeof inputData.sort === "string"
-				? JSON.parse(inputData.sort)
-				: inputData.sort
-			: null
-
-	return {
-		filter: inputData.filter ?? null,
-		range: inputData.range ?? null,
-		sort: inputData.sort ?? null
-	}
-}
-
-// export async function sendEmailToEmail(configuration: Configuration) {
-//   try {
+// try {
 //     const emailProviderByService: ActiveNotificationService | null =
 //       await getActiveEmailProvider();
 //     if (!emailProviderByService) {
@@ -222,7 +150,60 @@ export async function listFunction(inputData: any) {
 //     console.log(`error?.message`, error?.message);
 //     throw error;
 //   }
-// }
+}
+
+export async function regexEmail(email: string) {
+	const emailRegex = new RegExp(
+		/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+	)
+	const isValidEmail: boolean = emailRegex.test(email)
+	return isValidEmail
+}
+
+export async function regexMobile(mobile: string) {
+	const phoneRegex = new RegExp(/^[6789]\d{9}$/)
+	const isValidPhone: boolean = phoneRegex.test(mobile)
+	return isValidPhone
+}
+
+export async function regexDob(dob: string) {
+	const dobRegex = new RegExp(/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/)
+	const isValidDob: boolean = dobRegex.test(dob)
+	return isValidDob
+}
+
+export async function regexPassword(password: string) {
+	const clientSecretRegex = new RegExp(/[A-Za-z0-9]{8}/)
+	const isValidPassword: boolean = clientSecretRegex.test(password)
+	return isValidPassword
+}
+
+export async function listFunction(inputData: any) {
+	inputData.filter =
+		[undefined, null].indexOf(inputData.filter) < 0
+			? typeof inputData.filter === "string"
+				? JSON.parse(inputData.filter)
+				: inputData.filter
+			: null
+	inputData.range =
+		[undefined, null].indexOf(inputData.range) < 0
+			? typeof inputData.range === "string"
+				? JSON.parse(inputData.range)
+				: inputData.range
+			: null
+	inputData.sort =
+		[undefined, null].indexOf(inputData.sort) < 0
+			? typeof inputData.sort === "string"
+				? JSON.parse(inputData.sort)
+				: inputData.sort
+			: null
+
+	return {
+		filter: inputData.filter ?? null,
+		range: inputData.range ?? null,
+		sort: inputData.sort ?? null
+	}
+}
 
 // get data from configuration
 const encryptCred: {
