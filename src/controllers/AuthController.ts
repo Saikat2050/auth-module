@@ -131,9 +131,7 @@ class AuthController {
 				secrectCode: await encryptionByCrypto(
 					JSON.stringify({
 						otp: otpRandom,
-						expireIn: moment()
-							.add(10, "minutes")
-							.format()
+						expireIn: moment().add(10, "minutes").format()
 					})
 				)
 			})
@@ -173,13 +171,18 @@ class AuthController {
 
 			// varify otp data
 			if (userExists.secrectCode) {
-				const decryptedData = await decryptBycrypto(userExists.secrectCode)
+				const decryptedData = await decryptBycrypto(
+					userExists.secrectCode
+				)
 				const otpData: SecrectCodeSchema =
-				typeof decryptedData === "string"
-					? JSON.parse(decryptedData)
-					: decryptedData
+					typeof decryptedData === "string"
+						? JSON.parse(decryptedData)
+						: decryptedData
 
-				if (Number(otpData.otp) === Number(otp) && moment(otpData.expireIn).diff(moment()) >= 0) {
+				if (
+					Number(otpData.otp) === Number(otp) &&
+					moment(otpData.expireIn).diff(moment()) >= 0
+				) {
 					await User.findByIdAndUpdate(userExists._id, {
 						isVerified: true
 					})
@@ -237,13 +240,18 @@ class AuthController {
 
 			// varify otp data
 			if (userExists.secrectCode) {
-				const decryptedData = await decryptBycrypto(userExists.secrectCode)
+				const decryptedData = await decryptBycrypto(
+					userExists.secrectCode
+				)
 				const otpData: SecrectCodeSchema =
-				typeof decryptedData === "string"
-					? JSON.parse(decryptedData)
-					: decryptedData
+					typeof decryptedData === "string"
+						? JSON.parse(decryptedData)
+						: decryptedData
 
-				if (Number(otpData.otp) === Number(otp) && moment(otpData.expireIn).diff(moment().format()) >= 0) {
+				if (
+					Number(otpData.otp) === Number(otp) &&
+					moment(otpData.expireIn).diff(moment().format()) >= 0
+				) {
 					await User.findByIdAndUpdate(userExists._id, {
 						password: encryptPassword,
 						isVerified: true
@@ -318,7 +326,11 @@ class AuthController {
 				mobile: userExists.mobile
 			}
 
-			return response.successResponse({message: "Logged In successfully", token, data})
+			return response.successResponse({
+				message: "Logged In successfully",
+				token,
+				data
+			})
 		} catch (error: any) {
 			eventEmitter.emit("logging", error.toString())
 			next(error)

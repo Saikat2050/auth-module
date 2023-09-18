@@ -9,7 +9,6 @@ import {ApiResponse} from "../helpers/ApiResponse"
 
 class AuthController {
 	constructor() {
-		
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
 		this.delete = this.delete.bind(this)
@@ -27,28 +26,28 @@ class AuthController {
 					message: "User not found"
 				})
 			}
-		
-		// update  
-		if (req.body.email) {
-			inputData.email = req.body.email.email
-			inputData.isVerified = false
 
-			const isValidPassword: boolean = await bcrypt.compare(
-				req.body.email.password,
-				listUserData.password
-			)
-			if (!isValidPassword) {
-				return response.errorResponse({
-					statusCode: 401,
-					message: "Unauthorized",
-				})
+			// update
+			if (req.body.email) {
+				inputData.email = req.body.email.email
+				inputData.isVerified = false
+
+				const isValidPassword: boolean = await bcrypt.compare(
+					req.body.email.password,
+					listUserData.password
+				)
+				if (!isValidPassword) {
+					return response.errorResponse({
+						statusCode: 401,
+						message: "Unauthorized"
+					})
+				}
 			}
-		}
-		await User.findByIdAndUpdate(userId , inputData)
+			await User.findByIdAndUpdate(userId, inputData)
 
-		return response.successResponse({
-			message : "User updated successfully"
-		})
+			return response.successResponse({
+				message: "User updated successfully"
+			})
 		} catch (error) {
 			next(error)
 		}
@@ -69,7 +68,7 @@ class AuthController {
 				filterObject._id = filter.userId
 			}
 			if (filter?.search) {
-				filterObject.name = new RegExp(`/${filter.search}/`, 'g')
+				filterObject.name = new RegExp(`/${filter.search}/`, "g")
 			}
 
 			// sort
@@ -84,10 +83,13 @@ class AuthController {
 			}
 			if (range?.page) {
 				const page = Number(range?.page) - 1
-				skip = Number(limit*page)
+				skip = Number(limit * page)
 			}
 
-			const data = User.find(filterObject).sort(sortObject).skip(skip).limit(limit)
+			const data = User.find(filterObject)
+				.sort(sortObject)
+				.skip(skip)
+				.limit(limit)
 
 			return response.successResponse({
 				message: "User List fetched successfully",
@@ -120,15 +122,13 @@ class AuthController {
 			if (!isValidPassword) {
 				return response.errorResponse({
 					statusCode: 401,
-					message: "Unauthorized",
+					message: "Unauthorized"
 				})
 			}
 
 			// delete
-			await User.findByIdAndUpdate(userId,
-				{ isDeleted: true }
-			)
-	
+			await User.findByIdAndUpdate(userId, {isDeleted: true})
+
 			return response.successResponse({
 				message: `User deleted successfully`
 			})

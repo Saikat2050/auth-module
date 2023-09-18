@@ -17,7 +17,8 @@ export type UserTableData = {
 	isVerified: boolean
 	isActive: boolean
 	isDeleted: boolean
-} & Range & OrderDir
+} & Range &
+	OrderDir
 
 export type UserDetails = Omit<UserTableData, "password">
 
