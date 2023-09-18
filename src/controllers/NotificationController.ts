@@ -1,7 +1,7 @@
 require("dotenv").config()
 import {Request, Response, NextFunction} from "express"
 import * as nodemailer from 'nodemailer';
-import { NotificationDetails } from "../types/notification";
+// import { NotificationDetails } from "../types/notification";
 import { ApiResponse } from "../helpers/ApiResponse";
 
 class NotificationController{
@@ -10,7 +10,7 @@ class NotificationController{
     }
     public async sendEmail(req: Request, res: Response, next: NextFunction) {
         const response = new ApiResponse(res)
-        const inputData: NotificationDetails = req.body
+        const inputData = req.body
         try {
             const transporter = nodemailer.createTransport({
                 service: process.env.NODMAILER_SERVICE as string,
@@ -22,11 +22,12 @@ class NotificationController{
               const emailArr: string[] = [] 
               
               // Define the email data
-              const mailOptions: NotificationDetails = {
+              const mailOptions = {
                 from: process.env.NODMAILER_USER as string,
                 to: emailArr,
                 subject: inputData.subject,
-                text: inputData.text
+                text: inputData.text,
+                html: inputData.html
               };
               
               // Send the email
