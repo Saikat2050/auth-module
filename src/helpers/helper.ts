@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 	port: 587,
 	secure: false,
 	auth: {
-		user: process.env.D_USER,
+		user: process.env.NODEMAILER_USER,
 		pass: process.env.NODMAILER_PASSWORD
 	}
 })
@@ -41,99 +41,51 @@ export async function sendSMS(mobile: any, message: any) {}
 export async function sendOtpToEmail(
 	email: string,
 	otp: number,
-	firstName: string
+	firstName: string,
+	fileName?: string
 ) {
 	  // need to pass the email
 	  const configuration: any = {
-	    email: [email],
-	    from: process.env.NODEMAILER_USER,
-	    publicKey: process.env.NODEMAILER_USER,
-	    privateKey: process.env.NODMAILER_PASSWORD,
 	    subject: "Verify your email!",
-	    fileName: "otp_send.ejs",
-	    firstNameR: firstName,
+	    firstName,
 	    otp
 	  }
 	 
 	try {
 	  
-	    if (!configuration.fileName) {
-	      configuration.fileName = "default.ejs";
+	    if (!fileName) {
+	      fileName = "default.ejs";
 	    }
-	    // node mailer config
-	    const config = {
-	      host: configuration.host as string,
-	      port: parseInt(configuration.port as string),
-	      auth: {
-	        user: configuration?.publicKey as string,
-	        pass: configuration?.privateKey as string,
-	      },
-	    };
-	    const transport = nodemailer.createTransport(config);
-	    const emailArr: any[] = [];
-	    const ccEmailArr: string[] = [];
-	    const bccEmailArr: string[] = [];
-	    if (Array.isArray(configuration.email)) {
-	      configuration.email.forEach((email) => {
-	        emailArr.push({
-	          Email: email,
-	        });
-	      });
-	    } else if (configuration.email) {
-	      emailArr.push({
-	        Email: configuration.email,
-	      });
-	    }
-	    if (Array.isArray(configuration?.cc)) {
-	      configuration.cc.forEach((email) => {
-	        ccEmailArr.push(email);
-	      });
-	    } else if (configuration.cc) {
-	      ccEmailArr.push(configuration.cc);
-	    }
-	    if (Array.isArray(configuration.bcc)) {
-	      configuration.bcc?.forEach((email) => {
-	        bccEmailArr.push(email);
-	      });
-	    } else if (configuration.bcc) {
-	      bccEmailArr.push(configuration.bcc);
-	    }
-	    eventEmitter.emit(`emailArr`, emailArr);
+
 	    return new Promise((resolve, reject) => {
 	      ejs.renderFile(
-	        path.join(__dirname, `../views/email/${configuration.fileName}`),
+	        path.join(__dirname, `../../views/email/${fileName}`),
 	        configuration,
 	        (err, result) => {
-	          emailArr.forEach((_email) => {
-	            eventEmitter.emit(`_email`, _email);
 	            if (err) {
 	              eventEmitter.emit(`err?.message`, err?.message);
 	              throw err;
 	            } else {
 	              const message = {
-	                from: configuration.from as string,
-	                to: _email.Email,
-	                cc: ccEmailArr,
-	                bcc: bccEmailArr,
-	                subject: configuration.subject as string,
-	                html: result,
-	                attachments: configuration.attachments,
+	                from: process.env.NODEMAILER_USER as string,
+	                to: email,
+	                subject: configuration.subject,
+	                html: result
 	              };
-	              transport.sendMail(message, function (err1, info) {
-	                if (err1) {
-	                  eventEmitter.emit(`err1?.message`, err1?.message);
-	                  return reject(err1);
+	              transporter.sendMail(message, function (error, info) {
+	                if (error) {
+	                  eventEmitter.emit(`logging`, error?.message);
+	                  return reject(error);
 	                } else {
 	                  return resolve(info);
 	                }
 	              });
 	            }
-	          });
 	        }
 	      );
 	    });
 	  } catch (error: any) {
-	    eventEmitter.emit(`error?.message`, error?.message);
+	    eventEmitter.emit(`logging`, error?.message);
 	    throw error;
 	  }
 }

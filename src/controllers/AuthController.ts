@@ -140,7 +140,8 @@ class AuthController {
 			await helper.sendOtpToEmail(
 				email,
 				Number(otpRandom),
-				userExists.name as string
+				userExists.name as string,
+				process.env.OTP_FILENAME as string
 			)
 
 			return response.successResponse({
@@ -282,7 +283,8 @@ class AuthController {
 				email: inputData.email,
 				roleId: inputData.roleId,
 				isDeleted: false,
-				isActive: true
+				isActive: true,
+				isVerified: true
 			})
 			if (!userExists) {
 				return response.errorResponse({
