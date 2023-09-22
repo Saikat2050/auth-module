@@ -44,50 +44,49 @@ export async function sendOtpToEmail(
 	firstName: string,
 	fileName?: string
 ) {
-	  // need to pass the email
-	  const configuration: any = {
-	    subject: "Verify your email!",
-	    firstName,
-	    otp
-	  }
-	 
-	try {
-	  
-	    if (!fileName) {
-	      fileName = "default.ejs";
-	    }
+	// need to pass the email
+	const configuration: any = {
+		subject: "Verify your email!",
+		firstName,
+		otp
+	}
 
-	    return new Promise((resolve, reject) => {
-	      ejs.renderFile(
-	        path.join(__dirname, `../../views/email/${fileName}`),
-	        configuration,
-	        (err, result) => {
-	            if (err) {
-	              eventEmitter.emit(`err?.message`, err?.message);
-	              throw err;
-	            } else {
-	              const message = {
-	                from: process.env.NODEMAILER_USER as string,
-	                to: email,
-	                subject: configuration.subject,
-	                html: result
-	              };
-	              transporter.sendMail(message, function (error, info) {
-	                if (error) {
-	                  eventEmitter.emit(`logging`, error?.message);
-	                  return reject(error);
-	                } else {
-	                  return resolve(info);
-	                }
-	              });
-	            }
-	        }
-	      );
-	    });
-	  } catch (error: any) {
-	    eventEmitter.emit(`logging`, error?.message);
-	    throw error;
-	  }
+	try {
+		if (!fileName) {
+			fileName = "default.ejs"
+		}
+
+		return new Promise((resolve, reject) => {
+			ejs.renderFile(
+				path.join(__dirname, `../../views/email/${fileName}`),
+				configuration,
+				(err, result) => {
+					if (err) {
+						eventEmitter.emit(`err?.message`, err?.message)
+						throw err
+					} else {
+						const message = {
+							from: process.env.NODEMAILER_USER as string,
+							to: email,
+							subject: configuration.subject,
+							html: result
+						}
+						transporter.sendMail(message, function (error, info) {
+							if (error) {
+								eventEmitter.emit(`logging`, error?.message)
+								return reject(error)
+							} else {
+								return resolve(info)
+							}
+						})
+					}
+				}
+			)
+		})
+	} catch (error: any) {
+		eventEmitter.emit(`logging`, error?.message)
+		throw error
+	}
 }
 
 export async function regexEmail(email: string) {
