@@ -137,11 +137,11 @@ class AuthController {
 			})
 
 			// send otp to email
-			// await helper.sendOtpToEmail({
-			// 	email,
-			// 	otp: Number(otpRandom),
-			// 	firstName: userExists.name
-			// })
+			await helper.sendOtpToEmail(
+				email,
+				Number(otpRandom),
+				userExists.name as string
+			)
 
 			return response.successResponse({
 				message: `OTP sent successfully`
