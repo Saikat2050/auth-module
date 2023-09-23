@@ -131,7 +131,12 @@ class AuthController {
 				secrectCode: await encryptionByCrypto(
 					JSON.stringify({
 						otp: otpRandom,
-						expireIn: moment().add(process.env.OTP_EXPIRATION_IN_MINUTES, "minutes").format()
+						expireIn: moment()
+							.add(
+								process.env.OTP_EXPIRATION_IN_MINUTES,
+								"minutes"
+							)
+							.format()
 					})
 				)
 			})
