@@ -26,3 +26,9 @@ export type Headers = any & {
 	userId: number
 	roleId: number
 }
+
+export type Project = {
+	newField: {
+		operation: any
+	}
+}

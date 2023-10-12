@@ -62,7 +62,9 @@ export type DeleteUserPayload = {
 }
 
 type FilterPayload = {
-	userId?: string
+	_id?: string | string[]
+	roleId?: number | number[]
+	email?: string | string[]
 	search?: string
 }
 

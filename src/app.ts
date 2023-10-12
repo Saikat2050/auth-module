@@ -151,12 +151,13 @@ app.listen(PORT, async () => {
 		mongoose.Promise = global.Promise
 		await mongoose.connect(mongoDB)
 	} catch (err) {
-		console.error(err)
+		// @ts-ignore
+		eventEmitter.emit("logging", err.toString())
 		process.exit()
 	}
 
-	eventEmitter.emit("logging", `Auth API is up and running on ${PORT}`)
-
 	// generate schema
 	generateSchema()
+
+	eventEmitter.emit("logging", `Auth API is up and running on ${PORT}`)
 })
