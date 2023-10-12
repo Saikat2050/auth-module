@@ -207,6 +207,7 @@ export async function generatePipeline(
 	range?: Range,
 	sort?: Sort,
 	unset?: string[],
+	customFilter?: any,
 	customPipeline?: any,
 	group?: any,
 	project?: Project,
@@ -243,6 +244,7 @@ export async function generatePipeline(
 		}
 	}
 
+	// not completed yet
 	if (filter?.search) {
 		filterObject.name = new RegExp(`/${filter.search}/`, "g")
 	}
@@ -264,7 +266,7 @@ export async function generatePipeline(
 	
 	let pipeline = [
 		{
-			$match: {...filterObject, ...customPipeline}
+			$match: {...filterObject, ...customFilter}
 		},
 		{
 			$sort: sortObject
@@ -284,6 +286,10 @@ export async function generatePipeline(
             $unset: unset
         })
 	} 
+
+	if (customPipeline) {
+		pipeline.push(customPipeline)
+	}
 
 	console.log("pipeline", pipeline)
 
