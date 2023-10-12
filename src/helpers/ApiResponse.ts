@@ -13,6 +13,16 @@ export class ApiResponse {
 		return this.res.status(data.statusCode).json(data)
 	}
 
+	public async successResponseForList(data: any) {
+		data.total = data.total ?? 0
+		data.data = data.data?? []
+    
+		data.statusCode = data.statusCode ?? 200
+		data.success = true
+
+		return this.res.status(data.statusCode).json(data)
+	}
+
 	public async errorResponse(data: any) {
 		data.statusCode = data.statusCode ?? 422
 		data.success = false

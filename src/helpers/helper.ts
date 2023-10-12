@@ -1,10 +1,10 @@
-import {Request} from "express"
 import nodemailer from "nodemailer"
-import Axios from "axios"
 import ejs from "ejs"
-import jwt from "jsonwebtoken"
 import path from "path"
 import Crypto from "crypto"
+import mongoose from "mongoose"
+import _ from "lodash"
+import {Project, Range, Sort} from "../types/common"
 import eventEmitter from "../lib/logging"
 
 const transporter = nodemailer.createTransport({
@@ -29,7 +29,8 @@ export default {
 	listFunction,
 	encryptionByCrypto,
 	decryptBycrypto,
-	sendOtpToEmail
+	sendOtpToEmail,
+	generatePipeline
 }
 
 export async function generateOtp() {
@@ -199,4 +200,92 @@ export async function decryptBycrypto(encryptedData: string) {
 		decipher.update(buff.toString("utf8"), "hex", "utf8") +
 			decipher.final("utf8")
 	)
+}
+
+export async function generatePipeline(
+	filter: any,
+	range?: Range,
+	sort?: Sort,
+	unset?: string[],
+	customPipeline?: any,
+	group?: any,
+	project?: Project,
+	isTotalRequired: boolean = false
+) {
+	let filterObject: any = {
+		isDeleted: false
+	}
+	let sortObject: any = {}
+	let limit: number = 100 // page size
+	let skip: number = 0 // page - 1
+
+	// filter
+	const keys: string[] = Object.keys(filter)
+
+	for (let key of keys) {
+		if (key.toString().trim() === "_id") {
+			if (typeof filter[key] === "object") {
+				const ids = filter[key].map((el) => new mongoose.Types.ObjectId(el))
+
+				filterObject[key] = {
+					$in: ids
+				}
+			} else {
+
+				filterObject[key] = new mongoose.Types.ObjectId(filter[key])
+			}
+		} else if (typeof filter[key] === "object") {
+			filterObject[key] = {
+				$in: filter[key]
+			}
+		} else {
+			filterObject[key] = filter[key]
+		}
+	}
+
+	if (filter?.search) {
+		filterObject.name = new RegExp(`/${filter.search}/`, "g")
+	}
+
+	// sort
+	if (sort) {
+		sortObject[`${sort.orderBy}`] = sort.orderDir ?? 1
+	}
+	sortObject.createdAt = -1
+
+	// range
+	if (range?.pageSize) {
+		limit = Number(range.pageSize)
+	}
+	if (range?.page) {
+		const page = Number(range?.page) - 1
+		skip = Number(limit * page)
+	}
+	
+	let pipeline = [
+		{
+			$match: {...filterObject, ...customPipeline}
+		},
+		{
+			$sort: sortObject
+		},
+		{
+			$skip: skip
+		},
+		{
+			$limit: limit
+		}
+	]
+
+	// unset
+	if (unset?.length) {
+		pipeline.push({
+			// @ts-ignore
+            $unset: unset
+        })
+	} 
+
+	console.log("pipeline", pipeline)
+
+	return pipeline
 }

@@ -6,6 +6,7 @@ import errorData from "../constants/errorData.json"
 
 import {UserDetails, UserUpdatePayload, ListUserPayload} from "../types/users"
 import {ApiResponse} from "../helpers/ApiResponse"
+import {generatePipeline} from "../helpers/helper"
 
 class AuthController {
 	constructor() {
@@ -58,40 +59,24 @@ class AuthController {
 			const response = new ApiResponse(res)
 			const {filter, range, sort}: ListUserPayload = req.body
 
-			let filterObject: any = {}
-			let sortObject: any = {}
-			let limit: number = 100 // page size
-			let skip: number = 0 // page - 1
+			// const data = await User.find(filterObject)
+			// 	.sort(sortObject)
+			// 	.skip(skip)
+			// 	.limit(limit)
+			// 	.lean()
 
-			// filter
-			if (filter?.userId) {
-				filterObject._id = filter.userId
-			}
-			if (filter?.search) {
-				filterObject.name = new RegExp(`/${filter.search}/`, "g")
-			}
+			const pipeline = await generatePipeline(filter, range, sort, [
+				"password"
+			], {
+				isActive: true
+			})
 
-			// sort
-			if (sort) {
-				sortObject[`${sort.orderBy}`] = sort.orderDir ?? 1
-			}
-			sortObject.createdAt = -1
+			const data = await User.aggregate(pipeline, {
+				allowDiskUse: true
+			})
 
-			// range
-			if (range?.pageSize) {
-				limit = Number(range.pageSize)
-			}
-			if (range?.page) {
-				const page = Number(range?.page) - 1
-				skip = Number(limit * page)
-			}
 
-			const data = User.find(filterObject)
-				.sort(sortObject)
-				.skip(skip)
-				.limit(limit)
-
-			return response.successResponse({
+			return response.successResponseForList({
 				message: "User List fetched successfully",
 				data
 			})

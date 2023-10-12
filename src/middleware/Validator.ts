@@ -95,10 +95,10 @@ class Validator {
 			}
 
 			// userID
-			req.headers.userId = userExist[0].userId
+			req.headers.userId = userExist._id.toString()
 
 			// roleID
-			req.headers.roleId = userExist[0].roleId
+			req.headers.roleId = userExist.roleId.toString()
 
 			next()
 		} catch (err: any) {
