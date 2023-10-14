@@ -227,13 +227,14 @@ export async function generatePipeline(
 	for (let key of keys) {
 		if (key.toString().trim() === "_id") {
 			if (typeof filter[key] === "object") {
-				const ids = filter[key].map((el) => new mongoose.Types.ObjectId(el))
+				const ids = filter[key].map(
+					(el) => new mongoose.Types.ObjectId(el)
+				)
 
 				filterObject[key] = {
 					$in: ids
 				}
 			} else {
-
 				filterObject[key] = new mongoose.Types.ObjectId(filter[key])
 			}
 		} else if (typeof filter[key] === "object") {
@@ -263,7 +264,7 @@ export async function generatePipeline(
 		const page = Number(range?.page) - 1
 		skip = Number(limit * page)
 	}
-	
+
 	let pipeline = [
 		{
 			$match: {...filterObject, ...customFilter}
@@ -277,43 +278,43 @@ export async function generatePipeline(
 	if (unset?.length) {
 		pipeline.push({
 			// @ts-ignore
-            $unset: unset
-        })
+			$unset: unset
+		})
 	}
 
 	// group
 	if (group) {
-        pipeline.push({
-			// @ts-ignore
-            $group: group
-        })
-    }
-
-    // project
-    if (project) {
-        pipeline.push({
-			// @ts-ignore
-            $project: project
-        })
-    }
-
-    // total
-    if (isTotalRequired) {
-        pipeline.push({
-			// @ts-ignore
-            $count: 'total'
-        })
-    } else {
 		pipeline.push({
 			// @ts-ignore
-            $skip: skip
-        })
-		pipeline.push({
-			// @ts-ignore
-            $limit: limit
-        })
+			$group: group
+		})
 	}
-	
+
+	// project
+	if (project) {
+		pipeline.push({
+			// @ts-ignore
+			$project: project
+		})
+	}
+
+	// total
+	if (isTotalRequired) {
+		pipeline.push({
+			// @ts-ignore
+			$count: "total"
+		})
+	} else {
+		pipeline.push({
+			// @ts-ignore
+			$skip: skip
+		})
+		pipeline.push({
+			// @ts-ignore
+			$limit: limit
+		})
+	}
+
 	// Custom Pipeline
 	if (customPipeline) {
 		pipeline.push(customPipeline)

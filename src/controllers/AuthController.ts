@@ -92,11 +92,10 @@ class AuthController {
 			}
 
 			// hashing password
-			const salt: string = await bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS as string))
-			inputData.password = await bcrypt.hash(
-				inputData.password,
-				salt
+			const salt: string = await bcrypt.genSalt(
+				parseInt(process.env.SALT_ROUNDS as string)
 			)
+			inputData.password = await bcrypt.hash(inputData.password, salt)
 
 			const data = await User.create(inputData)
 
@@ -227,11 +226,10 @@ class AuthController {
 					message: "Password must be more then 8 char"
 				})
 			}
-			const salt: string = await bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS as string))
-			const encryptPassword: string = await bcrypt.hash(
-				password,
-				salt
+			const salt: string = await bcrypt.genSalt(
+				parseInt(process.env.SALT_ROUNDS as string)
 			)
+			const encryptPassword: string = await bcrypt.hash(password, salt)
 
 			// check if otp is valid
 			const userExists = await User.findOne({
