@@ -10,7 +10,7 @@ import {
 	SendOtpPayload,
 	ResetPasswordPayload,
 	verifyOtpPayload,
-	SecrectCodeSchema
+	secretCodeSchema
 } from "../types/auth"
 import helper, {decryptBycrypto, encryptionByCrypto} from "../helpers/helper"
 import {ApiResponse} from "../helpers/ApiResponse"
@@ -129,7 +129,7 @@ class AuthController {
 			const otpRandom: number = await helper.generateOtp()
 
 			await User.findByIdAndUpdate(userExists._id, {
-				secrectCode: await encryptionByCrypto(
+				secretCode: await encryptionByCrypto(
 					JSON.stringify({
 						otp: otpRandom,
 						expireIn: moment()
@@ -177,11 +177,11 @@ class AuthController {
 			}
 
 			// varify otp data
-			if (userExists.secrectCode) {
+			if (userExists.secretCode) {
 				const decryptedData = await decryptBycrypto(
-					userExists.secrectCode
+					userExists.secretCode
 				)
-				const otpData: SecrectCodeSchema =
+				const otpData: secretCodeSchema =
 					typeof decryptedData === "string"
 						? JSON.parse(decryptedData)
 						: decryptedData
@@ -247,11 +247,11 @@ class AuthController {
 			}
 
 			// varify otp data
-			if (userExists.secrectCode) {
+			if (userExists.secretCode) {
 				const decryptedData = await decryptBycrypto(
-					userExists.secrectCode
+					userExists.secretCode
 				)
-				const otpData: SecrectCodeSchema =
+				const otpData: secretCodeSchema =
 					typeof decryptedData === "string"
 						? JSON.parse(decryptedData)
 						: decryptedData

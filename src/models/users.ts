@@ -21,7 +21,7 @@ const userSchema = new Schema(
 		state: {type: String, required: false},
 		country: {type: String, required: false},
 		postalCode: {type: String, required: false},
-		secrectCode: {type: String, required: false},
+		secretCode: {type: String, required: false},
 		lastActivatedOn: {type: Date, required: false},
 		isVerified: {type: Boolean, default: false},
 		isActive: {type: Boolean, default: true},

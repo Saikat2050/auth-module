@@ -39,7 +39,7 @@ export type verifyOtpPayload = {
 	otp: string
 }
 
-export type SecrectCodeSchema = {
+export type secretCodeSchema = {
 	otp: string
 	expireIn: string
 }
