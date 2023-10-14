@@ -10,7 +10,7 @@ import {
 	SendOtpPayload,
 	ResetPasswordPayload,
 	verifyOtpPayload,
-	SecrectCodeSchema
+	secretCodeSchema
 } from "../types/auth"
 import helper, {decryptBycrypto, encryptionByCrypto} from "../helpers/helper"
 import {ApiResponse} from "../helpers/ApiResponse"
@@ -92,11 +92,10 @@ class AuthController {
 			}
 
 			// hashing password
-			const salt: string = await bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS as string))
-			inputData.password = await bcrypt.hash(
-				inputData.password,
-				salt
+			const salt: string = await bcrypt.genSalt(
+				parseInt(process.env.SALT_ROUNDS as string)
 			)
+			inputData.password = await bcrypt.hash(inputData.password, salt)
 
 			const data = await User.create(inputData)
 
@@ -129,7 +128,7 @@ class AuthController {
 			const otpRandom: number = await helper.generateOtp()
 
 			await User.findByIdAndUpdate(userExists._id, {
-				secrectCode: await encryptionByCrypto(
+				secretCode: await encryptionByCrypto(
 					JSON.stringify({
 						otp: otpRandom,
 						expireIn: moment()
@@ -177,11 +176,11 @@ class AuthController {
 			}
 
 			// varify otp data
-			if (userExists.secrectCode) {
+			if (userExists.secretCode) {
 				const decryptedData = await decryptBycrypto(
-					userExists.secrectCode
+					userExists.secretCode
 				)
-				const otpData: SecrectCodeSchema =
+				const otpData: secretCodeSchema =
 					typeof decryptedData === "string"
 						? JSON.parse(decryptedData)
 						: decryptedData
@@ -227,11 +226,10 @@ class AuthController {
 					message: "Password must be more then 8 char"
 				})
 			}
-			const salt: string = await bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS as string))
-			const encryptPassword: string = await bcrypt.hash(
-				password,
-				salt
+			const salt: string = await bcrypt.genSalt(
+				parseInt(process.env.SALT_ROUNDS as string)
 			)
+			const encryptPassword: string = await bcrypt.hash(password, salt)
 
 			// check if otp is valid
 			const userExists = await User.findOne({
@@ -247,11 +245,11 @@ class AuthController {
 			}
 
 			// varify otp data
-			if (userExists.secrectCode) {
+			if (userExists.secretCode) {
 				const decryptedData = await decryptBycrypto(
-					userExists.secrectCode
+					userExists.secretCode
 				)
-				const otpData: SecrectCodeSchema =
+				const otpData: secretCodeSchema =
 					typeof decryptedData === "string"
 						? JSON.parse(decryptedData)
 						: decryptedData

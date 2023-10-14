@@ -65,20 +65,64 @@ class AuthController {
 			// 	.limit(limit)
 			// 	.lean()
 
-			const pipeline = await generatePipeline(filter, range, sort, [
-				"password"
-			], {
-				isActive: true
-			})
+			const [pipeline, countPipeline] = await Promise.all([
+				generatePipeline(
+					filter,
+					range,
+					sort,
+					// [
+					// 	"name",
+					// 	"email",
+					// 	"mobile",
+					// 	"address",
+					// 	"city",
+					// 	"state",
+					// 	"country",
+					// 	"postalCode"
+					// ],
+					["password", "secretCode"],
+					{
+						isActive: true
+					}
+				),
+				generatePipeline(
+					filter,
+					range,
+					sort,
+					// [
+					// 	"name",
+					// 	"email",
+					// 	"mobile",
+					// 	"address",
+					// 	"city",
+					// 	"state",
+					// 	"country",
+					// 	"postalCode"
+					// ],
+					["password", "secretCode"],
+					{
+						isActive: true
+					},
+					undefined,
+					undefined,
+					undefined,
+					true
+				)
+			])
 
-			const data = await User.aggregate(pipeline, {
-				allowDiskUse: true
-			})
-
+			const [data, [{total}]] = await Promise.all([
+				User.aggregate(pipeline, {
+					allowDiskUse: true
+				}),
+				User.aggregate(countPipeline, {
+					allowDiskUse: true
+				})
+			])
 
 			return response.successResponseForList({
 				message: "User List fetched successfully",
-				data
+				data,
+				total
 			})
 		} catch (error) {
 			next(error)

@@ -12,7 +12,7 @@ export type UserTableData = {
 	state: string
 	country: string
 	postalCode: string
-	secrectCode: string
+	secretCode: string
 	lastActivatedOn: string
 	isVerified: boolean
 	isActive: boolean

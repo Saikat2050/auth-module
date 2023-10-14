@@ -15,8 +15,8 @@ export class ApiResponse {
 
 	public async successResponseForList(data: any) {
 		data.total = data.total ?? 0
-		data.data = data.data?? []
-    
+		data.data = data.data ?? []
+
 		data.statusCode = data.statusCode ?? 200
 		data.success = true
 
