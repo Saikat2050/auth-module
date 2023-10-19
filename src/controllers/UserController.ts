@@ -4,11 +4,11 @@ import bcrypt from "bcrypt"
 
 import errorData from "../constants/errorData.json"
 
-import {UserDetails, UserUpdatePayload, ListUserPayload} from "../types/users"
+import {UserUpdatePayload, ListUserPayload} from "../types/users"
 import {ApiResponse} from "../helpers/ApiResponse"
 import {generatePipeline} from "../helpers/helper"
 
-class AuthController {
+class UserController {
 	constructor() {
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
@@ -132,7 +132,14 @@ class AuthController {
 	public async delete(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const userId: string = req.body.userId
+			const userId: string = (req.headers.userId ?? "").toString().trim()
+
+			if (userId === "") {
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "User not found"
+				})
+			}
 
 			// check if user exist
 			const userDetails = await User.findById(userId)
@@ -167,4 +174,4 @@ class AuthController {
 	}
 }
 
-export default new AuthController()
+export default new UserController()
