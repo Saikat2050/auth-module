@@ -123,7 +123,7 @@
     }
   },
   "/v1/user": {
-    "hash": "4ca347e12089744fbc295a36bb18f3da328553c9",
+    "hash": "9e1a4b85bbe5b9ecda2e840fd5694b0be9909090",
     "schemas": {
       "/v1/user/update-user": {
         "additionalProperties": false,
@@ -225,9 +225,6 @@
                     "type": "string"
                   }
                 ]
-              },
-              "search": {
-                "type": "string"
               }
             },
             "additionalProperties": false
@@ -251,6 +248,9 @@
               }
             },
             "additionalProperties": false
+          },
+          "search": {
+            "type": "string"
           }
         },
         "additionalProperties": false,
