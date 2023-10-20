@@ -3,7 +3,7 @@ import User from "../models/users"
 import bcrypt from "bcrypt"
 import _ from "lodash"
 
-import { SearchPattern } from "../lib/SearchPattern"
+import {SearchPattern} from "../lib/SearchPattern"
 import errorData from "../constants/errorData.json"
 
 import {UserUpdatePayload, ListUserPayload} from "../types/users"

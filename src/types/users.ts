@@ -73,6 +73,6 @@ export type ListUserPayload = {
 	sort?: {
 		orderBy?: "userId"
 		orderDir?: OrderDir
-	},
+	}
 	search?: string
 }
