@@ -1,7 +1,9 @@
 import {Request, Response, NextFunction} from "express"
 import User from "../models/users"
 import bcrypt from "bcrypt"
+import _ from "lodash"
 
+import { SearchPattern } from "../lib/SearchPattern"
 import errorData from "../constants/errorData.json"
 
 import {UserUpdatePayload, ListUserPayload} from "../types/users"
@@ -57,7 +59,7 @@ class UserController {
 	public async list(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const {filter, range, sort}: ListUserPayload = req.body
+			const {filter, range, sort, search}: ListUserPayload = req.body
 
 			// const data = await User.find(filterObject)
 			// 	.sort(sortObject)
@@ -67,7 +69,7 @@ class UserController {
 
 			const [pipeline, countPipeline] = await Promise.all([
 				generatePipeline(
-					filter,
+					filter ?? {},
 					range,
 					sort,
 					// [
@@ -86,7 +88,7 @@ class UserController {
 					}
 				),
 				generatePipeline(
-					filter,
+					filter ?? {},
 					range,
 					sort,
 					// [
@@ -110,7 +112,7 @@ class UserController {
 				)
 			])
 
-			const [data, [{total}]] = await Promise.all([
+			let [data, [{total}]] = await Promise.all([
 				User.aggregate(pipeline, {
 					allowDiskUse: true
 				}),
@@ -118,6 +120,17 @@ class UserController {
 					allowDiskUse: true
 				})
 			])
+
+			if ((search ?? "").toString().trim() !== "") {
+				const searchPattern = new SearchPattern(search as string)
+
+				const dataChunkArr = _.chunk(data, 200)
+				await Promise.all(
+					dataChunkArr.map((el) => searchPattern.SearchByPattern(el))
+				)
+
+				data = await searchPattern.getSearchedArr()
+			}
 
 			return response.successResponseForList({
 				message: "User List fetched successfully",

@@ -34,7 +34,8 @@ export default {
 }
 
 export async function generateOtp() {
-	return Math.floor(100000 + Math.random() * 900000)
+	return Number(_.random(100000, 999999))
+	// return Math.floor(100000 + Math.random() * 900000)
 }
 
 export async function sendSMS(mobile: any, message: any) {}
@@ -245,10 +246,6 @@ export async function generatePipeline(
 			filterObject[key] = filter[key]
 		}
 	}
-
-	// if (filter?.search && searchFields?.length) {
-	// 	filterObject.name = new RegExp(`/${filter.search}/`, "g")
-	// }
 
 	// sort
 	if (sort) {

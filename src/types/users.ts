@@ -65,7 +65,6 @@ type FilterPayload = {
 	_id?: string | string[]
 	roleId?: number | number[]
 	email?: string | string[]
-	search?: string
 }
 
 export type ListUserPayload = {
@@ -74,5 +73,6 @@ export type ListUserPayload = {
 	sort?: {
 		orderBy?: "userId"
 		orderDir?: OrderDir
-	}
+	},
+	search?: string
 }
