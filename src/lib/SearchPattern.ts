@@ -16,8 +16,14 @@ export class SearchPattern {
 		data = data
 			.map((el) => {
 				let seachableTexts: string = ""
-				seachableTexts += this.fields.map((field) => `${el[field] ?? ""} `) 
-				const score = similarity(JSON.stringify(seachableTexts), this.searchStr, {sensitive: false})
+				seachableTexts += this.fields.map(
+					(field) => `${el[field] ?? ""} `
+				)
+				const score = similarity(
+					JSON.stringify(seachableTexts),
+					this.searchStr,
+					{sensitive: false}
+				)
 
 				return {
 					data: el,
@@ -25,7 +31,7 @@ export class SearchPattern {
 				}
 			})
 			.filter((el) => Number(el.score) > 0.06)
-		
+
 		this.resultArr = this.resultArr.concat(data)
 		return data
 	}
