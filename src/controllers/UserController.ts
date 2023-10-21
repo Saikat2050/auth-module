@@ -112,7 +112,7 @@ class UserController {
 				)
 			])
 
-			const [data, [{total}]] = await Promise.all([
+			let [data, [{total}]] = await Promise.all([
 				User.aggregate(pipeline, {
 					allowDiskUse: true
 				}),
