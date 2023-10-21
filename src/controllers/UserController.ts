@@ -121,20 +121,30 @@ class UserController {
 				})
 			])
 
+			let searchedData: any[] = []
 			if ((search ?? "").toString().trim() !== "") {
-				const searchPattern = new SearchPattern(search as string)
+				const searchPattern = new SearchPattern(search as string, [
+					"name",
+					"email",
+					"mobile",
+					"address",
+					"city",
+					"state",
+					"country",
+					"postalCode"
+				])
 
 				const dataChunkArr = _.chunk(data, 200)
 				await Promise.all(
 					dataChunkArr.map((el) => searchPattern.SearchByPattern(el))
 				)
 
-				data = await searchPattern.getSearchedArr()
+				searchedData = await searchPattern.getSearchedArr()
 			}
 
 			return response.successResponseForList({
 				message: "User List fetched successfully",
-				data,
+				data: searchedData.length ? searchedData : data,
 				total
 			})
 		} catch (error) {

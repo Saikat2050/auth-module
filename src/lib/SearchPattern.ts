@@ -4,23 +4,33 @@ import _ from "lodash"
 export class SearchPattern {
 	private searchStr: string
 	private resultArr: any[]
+	private fields: string[]
 
-	constructor(searchStr: string) {
+	constructor(searchStr: string, searchableField: string[]) {
 		this.searchStr = searchStr
 		this.resultArr = []
+		this.fields = searchableField
 	}
 
 	public async SearchByPattern(data: any[]) {
 		data = data
 			.map((el) => {
-				const score = similarity(JSON.stringify(el), this.searchStr)
+				let seachableTexts: string = ""
+				seachableTexts += this.fields.map(
+					(field) => `${el[field] ?? ""} `
+				)
+				const score = similarity(
+					JSON.stringify(seachableTexts),
+					this.searchStr,
+					{sensitive: false}
+				)
 
 				return {
 					data: el,
 					score
 				}
 			})
-			.filter((el) => el.score > 0)
+			.filter((el) => Number(el.score) > 0.06)
 
 		this.resultArr = this.resultArr.concat(data)
 		return data
