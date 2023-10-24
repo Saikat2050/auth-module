@@ -83,8 +83,8 @@ class Validator {
 			}
 			const userId =
 				typeof decoded === "string"
-					? JSON.parse(decoded)?.userId ?? null
-					: decoded?.userId ?? null
+					? JSON.parse(decoded)?._id ?? null
+					: decoded?._id ?? null
 			if (!userId) {
 				throw new Error("User does not exist")
 			}

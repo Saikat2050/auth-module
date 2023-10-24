@@ -23,7 +23,7 @@ export type Error = {
 }
 
 export type Headers = any & {
-	userId: number
+	_id: number
 	roleId: number
 }
 
