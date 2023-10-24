@@ -7,7 +7,7 @@ async function connectDB() {
 	try {
 		mongoose.Promise = global.Promise
 		await mongoose.connect(mongoDB)
-		eventEmitter.emit("logging", 'Connected to database')
+		eventEmitter.emit("logging", "Connected to database")
 	} catch (err) {
 		// @ts-ignore
 		eventEmitter.emit("logging", err.toString())
