@@ -32,7 +32,6 @@ class AuthController {
 			const response = new ApiResponse(res)
 			const inputData: RegisterPayload = req.body
 
-
 			const [isValidEmail, isValidPhone, isValidPassword]: [
 				boolean,
 				boolean,
@@ -96,8 +95,13 @@ class AuthController {
 			const salt: string = await bcrypt.genSalt(
 				parseInt(process.env.SALT_ROUNDS as string)
 			)
-			inputData.password = await bcrypt.hash((inputData.password).trim(), salt)
-			inputData.name = inputData.name ? inputData.name.trim() : inputData.name
+			inputData.password = await bcrypt.hash(
+				inputData.password.trim(),
+				salt
+			)
+			inputData.name = inputData.name
+				? inputData.name.trim()
+				: inputData.name
 			const data = await User.create(inputData)
 
 			return response.successResponse({

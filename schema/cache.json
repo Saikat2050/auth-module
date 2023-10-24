@@ -123,13 +123,13 @@
     }
   },
   "/v1/user": {
-    "hash": "9e1a4b85bbe5b9ecda2e840fd5694b0be9909090",
+    "hash": "20c0878f3990ec64f9f1901dd7f7a8395d6c6696",
     "schemas": {
       "/v1/user/update-user": {
         "additionalProperties": false,
         "type": "object",
         "properties": {
-          "userId": {
+          "_id": {
             "type": "string"
           },
           "name": {
@@ -177,7 +177,7 @@
           }
         },
         "required": [
-          "userId"
+          "_id"
         ],
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
@@ -236,7 +236,7 @@
             "type": "object",
             "properties": {
               "orderBy": {
-                "const": "userId",
+                "const": "_id",
                 "type": "string"
               },
               "orderDir": {
@@ -273,7 +273,7 @@
       "/v1/user/delete-user": {
         "type": "object",
         "properties": {
-          "userId": {
+          "_id": {
             "type": "string"
           },
           "password": {
@@ -282,8 +282,8 @@
         },
         "additionalProperties": false,
         "required": [
-          "password",
-          "userId"
+          "_id",
+          "password"
         ],
         "$schema": "http://json-schema.org/draft-07/schema#"
       }
