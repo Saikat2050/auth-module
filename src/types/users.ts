@@ -23,7 +23,7 @@ export type UserTableData = {
 export type UserDetails = Omit<UserTableData, "password">
 
 export type UserUpdateAPIPayload = {
-	userId: string
+	_id: string
 } & Partial<{
 	name: string
 	email: {
@@ -41,7 +41,7 @@ export type UserUpdateAPIPayload = {
 }>
 
 export type UserUpdatePayload = {
-	userId: string
+	_id: string
 } & Partial<{
 	name: string
 	email: string
@@ -57,7 +57,7 @@ export type UserUpdatePayload = {
 }>
 
 export type DeleteUserPayload = {
-	userId: string
+	_id: string
 	password: string
 }
 
@@ -71,7 +71,7 @@ export type ListUserPayload = {
 	filter?: FilterPayload
 	range?: Range
 	sort?: {
-		orderBy?: "userId"
+		orderBy?: "_id"
 		orderDir?: OrderDir
 	}
 	search?: string

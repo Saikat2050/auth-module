@@ -20,9 +20,9 @@ class UserController {
 	public async update(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			let {userId, ...inputData}: UserUpdatePayload = req.body
+			let {_id, ...inputData}: UserUpdatePayload = req.body
 
-			const listUserData = await User.findById(userId)
+			const listUserData = await User.findById({_id})
 			if (!listUserData) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
@@ -46,7 +46,7 @@ class UserController {
 					})
 				}
 			}
-			await User.findByIdAndUpdate(userId, inputData)
+			await User.findByIdAndUpdate(_id, inputData)
 
 			return response.successResponse({
 				message: "User updated successfully"
@@ -155,9 +155,9 @@ class UserController {
 	public async delete(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const userId: string = (req.headers.userId ?? "").toString().trim()
+			const _id: string = (req.headers._id ?? "").toString().trim()
 
-			if (userId === "") {
+			if (_id === "") {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "User not found"
@@ -165,7 +165,7 @@ class UserController {
 			}
 
 			// check if user exist
-			const userDetails = await User.findById(userId)
+			const userDetails = await User.findById(_id)
 
 			if (!userDetails) {
 				return response.errorResponse({
@@ -186,7 +186,7 @@ class UserController {
 			}
 
 			// delete
-			await User.findByIdAndUpdate(userId, {isDeleted: true})
+			await User.findByIdAndUpdate(_id, {isDeleted: true})
 
 			return response.successResponse({
 				message: `User deleted successfully`
