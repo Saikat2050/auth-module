@@ -1,5 +1,5 @@
 require("dotenv").config()
-import mongoose from "mongoose"
+require("./lib/db")
 import express, {Application, Request, Response, NextFunction} from "express"
 import cors from "cors"
 import path from "path"
@@ -144,18 +144,6 @@ app.use(ApiMiddlewares.exceptionHandler)
 
 // server
 app.listen(PORT, async () => {
-	// Connect to mongoDB
-	const mongoDB: string =
-		process.env.MONGODB_URI || "mongodb://localhost:27017/<database>"
-	try {
-		mongoose.Promise = global.Promise
-		await mongoose.connect(mongoDB)
-	} catch (err) {
-		// @ts-ignore
-		eventEmitter.emit("logging", err.toString())
-		process.exit()
-	}
-
 	// generate schema
 	generateSchema()
 
