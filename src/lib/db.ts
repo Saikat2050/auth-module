@@ -13,9 +13,7 @@ async function createMongoDBURI() {
 
 	return `mongodb+srv://${process.env.MONGODB_USERNAME ?? ""}:${
 		process.env.MONGODB_PASSWORD ?? ""
-	}@${
-		process.env.MONGODB_SERVER ?? ""
-	}/?retryWrites=true&w=majority`
+	}@${process.env.MONGODB_SERVER ?? ""}/?retryWrites=true&w=majority`
 }
 
 async function connectDB() {
