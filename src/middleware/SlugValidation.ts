@@ -7,7 +7,11 @@ class SlugValidation {
 	private client
 	constructor() {}
 
-	public async connectResdisClient(req: Request, res: Response, next: NextFunction) {
+	public async connectResdisClient(
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) {
 		this.client = createClient()
 
 		this.client.on("error", (err) =>
@@ -49,13 +53,13 @@ class SlugValidation {
 					? JSON.parse(slugData?.config)
 					: slugData?.config
 
- 			await this.client.hSet(slug, configData)
+			await this.client.hSet(slug, configData)
 
 			serverConfig = await this.client.hGetAll(slug)
 		}
 
 		serverConfig = JSON.stringify(serverConfig, null, 2)
-		
+
 		req.headers.serverConfig = serverConfig
 		next()
 	}

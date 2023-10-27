@@ -108,9 +108,12 @@ class Validator {
 				}
 
 				// await dbConnection.deleteModel("User")
-				
-				userExist = typeof userExist === "string" ? JSON.parse(userExist) : userExist
-				
+
+				userExist =
+					typeof userExist === "string"
+						? JSON.parse(userExist)
+						: userExist
+
 				await client.hSet(slugName, {
 					_id: userExist._id.toString().trim(),
 					roleId: userExist.roleId.toString().trim(),
