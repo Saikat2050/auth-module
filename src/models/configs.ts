@@ -2,6 +2,18 @@ import mongoose from "mongoose"
 import uniqueValidator from "mongoose-unique-validator"
 const Schema = mongoose.Schema
 
+const useDbOptions = {
+	//ensures connections to the same databases are cached
+	useCache: true,
+	//remove event listeners from the main connection
+	noListener: true
+}
+
+const dbName = mongoose.connection.useDb(
+	process.env.MONGODB_MAIN_DB_NAME as string,
+	useDbOptions
+)
+
 const configSchema = new Schema(
 	{
 		title: {type: "String", required: true},
@@ -21,5 +33,5 @@ const configSchema = new Schema(
 )
 configSchema.plugin(uniqueValidator)
 
-const Config = mongoose.model("Config", configSchema)
+const Config = dbName.model("Config", configSchema)
 export default Config

@@ -1,5 +1,6 @@
 import {Request, Response, NextFunction} from "express"
-import User from "../models/users"
+import userSchema from "../models/users"
+import {DbConnection} from "../lib/DbConnection"
 import bcrypt from "bcrypt"
 import _ from "lodash"
 
@@ -20,7 +21,10 @@ class UserController {
 	public async update(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			let {_id, ...inputData}: UserUpdatePayload = req.body
+			const {_id, ...inputData}: UserUpdatePayload = req.body
+
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
 
 			const listUserData = await User.findById({_id})
 			if (!listUserData) {
@@ -48,6 +52,8 @@ class UserController {
 			}
 			await User.findByIdAndUpdate(_id, inputData)
 
+			// await dbConnection.deleteModel("User")
+
 			return response.successResponse({
 				message: "User updated successfully"
 			})
@@ -60,6 +66,9 @@ class UserController {
 		try {
 			const response = new ApiResponse(res)
 			const {filter, range, sort, search}: ListUserPayload = req.body
+
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
 
 			// const data = await User.find(filterObject)
 			// 	.sort(sortObject)
@@ -142,6 +151,8 @@ class UserController {
 				searchedData = await searchPattern.getSearchedArr()
 			}
 
+			// await dbConnection.deleteModel("User")
+
 			return response.successResponseForList({
 				message: "User List fetched successfully",
 				data: searchedData.length ? searchedData : data,
@@ -155,9 +166,12 @@ class UserController {
 	public async delete(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const _id: string = (req.headers._id ?? "").toString().trim()
+			const _id: string = (req.headers.userId ?? "").toString().trim()
 
-			if (_id === "") {
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
+
+			if (_id.toString().trim() === "") {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "User not found"
@@ -187,6 +201,8 @@ class UserController {
 
 			// delete
 			await User.findByIdAndUpdate(_id, {isDeleted: true})
+
+			// await dbConnection.deleteModel("User")
 
 			return response.successResponse({
 				message: `User deleted successfully`

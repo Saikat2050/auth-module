@@ -21,6 +21,7 @@ import routes from "./routes/MainRouter"
 /* Middlewares */
 import ApiMiddlewares from "./middleware/ApiMiddlewares"
 import Validator from "./middleware/Validator"
+import SlugValidation from "./middleware/SlugValidation"
 import {generateSchema} from "./lib/schemaGenerator"
 
 const PORT: number = parseInt(process.env.PORT as string)
@@ -111,6 +112,9 @@ app.use(
 app.use(ApiMiddlewares.accessControl)
 
 // utils and heplers
+app.use(SlugValidation.connectResdisClient)
+app.use(SlugValidation.validateSlug)
+
 app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true}))

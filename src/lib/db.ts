@@ -5,7 +5,8 @@ async function createMongoDBURI() {
 	if (
 		!process.env.MONGODB_USERNAME ||
 		!process.env.MONGODB_PASSWORD ||
-		!process.env.MONGODB_SERVER
+		!process.env.MONGODB_SERVER ||
+		!process.env.MONGODB_MAIN_DB_NAME
 	) {
 		eventEmitter.emit("logging", "Unable to connect to MongoDB")
 		process.exit()
