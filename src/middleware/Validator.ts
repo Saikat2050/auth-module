@@ -1,7 +1,9 @@
 import {Request, Response, NextFunction} from "express"
 import jwt from "jsonwebtoken"
 const Ajv = require("ajv")
-import User from "../models/users"
+import userSchema from "../models/users"
+import {DbConnection} from "../lib/DbConnection"
+import SlugValidation from "./SlugValidation"
 
 // import schemas from "../../schema/cache.json"
 const schemas = require("../../schema/cache.json")
@@ -10,7 +12,7 @@ import publicApi from "../schemas/publicRoutes.json"
 const ajv = new Ajv()
 
 class Validator {
-	constructor() {}
+	super() {}
 
 	public async schemaValidation(
 		req: Request,
@@ -89,16 +91,47 @@ class Validator {
 				throw new Error("User does not exist")
 			}
 
-			const userExist = await User.findById(userId)
-			if (!userExist) {
-				throw new Error("User does not exist")
+			const slug: string = req.headers.slug as string
+			const client = await SlugValidation.getClient()
+
+			const slugName: string = `${slug}:${userId}`
+			let userDetails = await client.hGetAll(slugName)
+
+			if (!userDetails) {
+				const dbConnection = new DbConnection(slug)
+				const User = await dbConnection.getModel(userSchema, "User")
+
+				let userExist = await User.findById(userId)
+
+				if (!userExist) {
+					throw new Error("User does not exist")
+				}
+
+				// await dbConnection.deleteModel("User")
+
+				userExist =
+					typeof userExist === "string"
+						? JSON.parse(userExist)
+						: userExist
+
+				await client.hSet(slugName, {
+					_id: userExist._id.toString().trim(),
+					roleId: userExist.roleId.toString().trim(),
+					name: userExist.name.toString().trim(),
+					email: userExist.email.toString().trim(),
+					mobile: userExist.mobile.toString().trim(),
+					isVerified: userExist.isVerified.toString().trim(),
+					isActive: userExist.isActive.toString().trim()
+				})
+
+				userDetails = await client.hGetAll(slugName)
 			}
 
 			// userID
-			req.headers.userId = userExist._id.toString()
+			req.headers.userId = userDetails._id.toString()
 
 			// roleID
-			req.headers.roleId = userExist.roleId.toString()
+			req.headers.roleId = userDetails.roleId.toString()
 
 			next()
 		} catch (err: any) {

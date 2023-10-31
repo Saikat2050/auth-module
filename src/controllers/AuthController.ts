@@ -2,7 +2,8 @@ import {Request, Response, NextFunction} from "express"
 import moment from "moment"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import User from "../models/users"
+import userSchema from "../models/users"
+import {DbConnection} from "../lib/DbConnection"
 
 import {
 	SignInPayload,
@@ -66,6 +67,9 @@ class AuthController {
 				})
 			}
 
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
+
 			const [phoneExists, userExists] = await Promise.all([
 				inputData.mobile
 					? User.findOne({
@@ -104,6 +108,8 @@ class AuthController {
 				: inputData.name
 			const data = await User.create(inputData)
 
+			// await dbConnection.deleteModel("User")
+
 			return response.successResponse({
 				message: "User created successfully",
 				data
@@ -118,6 +124,10 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 			const {email}: SendOtpPayload = req.body
+
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
+
 			//check if user exist
 			const userExists = await User.findOne({
 				email,
@@ -154,6 +164,8 @@ class AuthController {
 				process.env.OTP_FILENAME as string
 			)
 
+			// await dbConnection.deleteModel("User")
+
 			return response.successResponse({
 				message: `OTP sent successfully`
 			})
@@ -166,6 +178,9 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 			const {email, otp}: verifyOtpPayload = req.body
+
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
 
 			// check if otp is valid
 			const userExists = await User.findOne({
@@ -205,6 +220,8 @@ class AuthController {
 				}
 			}
 
+			// await dbConnection.deleteModel("User")
+
 			return response.successResponse({
 				message: `OTP verified successfully`
 			})
@@ -221,6 +238,9 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 			const {email, otp, password}: ResetPasswordPayload = req.body
+
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
 
 			// encrypt password
 			const isValidPassword: boolean =
@@ -275,6 +295,8 @@ class AuthController {
 				}
 			}
 
+			// await dbConnection.deleteModel("User")
+
 			return response.successResponse({
 				message: `Password updated successfully`
 			})
@@ -287,6 +309,9 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 			const inputData: SignInPayload = req.body
+
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const User = await dbConnection.getModel(userSchema, "User")
 
 			//check if user exist
 			const userExists = await User.findOne({
@@ -337,6 +362,8 @@ class AuthController {
 				email: userExists.email,
 				mobile: userExists.mobile
 			}
+
+			// await dbConnection.deleteModel("User")
 
 			return response.successResponse({
 				message: "Logged In successfully",
