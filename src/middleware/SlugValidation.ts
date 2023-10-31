@@ -37,10 +37,10 @@ class SlugValidation {
 
 		if (!serverConfig) {
 			const slugData = await Config.findOne({
-				slug: "drop-servicing"
+				slug
 			})
 
-			if (slugData) {
+			if (!slugData) {
 				next({
 					statusCode: 401,
 					code: `unauthorize`,
