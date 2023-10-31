@@ -33,7 +33,7 @@ class SlugValidation {
 			})
 		}
 
-		let serverConfig = (await this.client.hGetAll(slug)) ?? null
+		let serverConfig = await this.client.hGetAll(slug)
 
 		// check for server configuration
 		let serverConfigArr = Object.keys(serverConfig)
