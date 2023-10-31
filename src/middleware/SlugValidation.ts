@@ -33,8 +33,13 @@ class SlugValidation {
 			})
 		}
 
-		let serverConfig = await this.client.hGetAll(slug)
+		let serverConfig = (await this.client.hGetAll(slug)) ?? null
 
+		// check for server configuration
+		let serverConfigArr = Object.keys(serverConfig)
+		if (!serverConfigArr?.length) {
+			serverConfig = null
+		}
 		if (!serverConfig) {
 			const slugData = await Config.findOne({
 				slug
@@ -46,16 +51,16 @@ class SlugValidation {
 					code: `unauthorize`,
 					message: "Invalid slug header"
 				})
+			} else {
+				const configData =
+					typeof slugData?.config === "string"
+						? JSON.parse(slugData?.config)
+						: slugData?.config
+
+				await this.client.hSet(slug, configData)
+
+				serverConfig = await this.client.hGetAll(slug)
 			}
-
-			const configData =
-				typeof slugData?.config === "string"
-					? JSON.parse(slugData?.config)
-					: slugData?.config
-
-			await this.client.hSet(slug, configData)
-
-			serverConfig = await this.client.hGetAll(slug)
 		}
 
 		serverConfig = JSON.stringify(serverConfig, null, 2)
