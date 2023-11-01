@@ -1,0 +1,18 @@
+[
+    {
+		"apiPath": "/v1/black-list/create",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/black-list/update",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/black-list/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/black-list/delete",
+		"method": "POST"
+	}
+]

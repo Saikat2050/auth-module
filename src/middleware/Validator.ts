@@ -4,10 +4,13 @@ const Ajv = require("ajv")
 import userSchema from "../models/users"
 import {DbConnection} from "../lib/DbConnection"
 import SlugValidation from "./SlugValidation"
+import BlackList from "../models/blackList"
+import {Role} from "../types/auth"
 
 // import schemas from "../../schema/cache.json"
 const schemas = require("../../schema/cache.json")
 import publicApi from "../schemas/publicRoutes.json"
+import reservedApi from "../schemas/reservedRoutes.json"
 
 const ajv = new Ajv()
 
@@ -94,6 +97,15 @@ class Validator {
 			const slug: string = req.headers.slug as string
 			const client = await SlugValidation.getClient()
 
+			const userBlackList = await BlackList.findOne({
+				userId,
+				slug
+			})
+
+			if (userBlackList) {
+				throw new Error("User is black-listed")
+			}
+
 			const slugName: string = `${slug}:${userId}`
 			let userDetails = await client.hGetAll(slugName)
 
@@ -150,6 +162,41 @@ class Validator {
 				message: err.message
 			})
 		}
+	}
+
+	public async roleValidation(
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) {
+		const roleId: number = Number(req.headers.roleId as string)
+		const reqUrl: string = req.url
+		const reqMethod: string = req.method
+		let isPermissionRequired: boolean = false
+
+		for (let i = 0; i < reservedApi.length; i++) {
+			if (
+				reqUrl === reservedApi[i].apiPath &&
+				reqMethod === reservedApi[i].method
+			) {
+				isPermissionRequired = true
+			}
+		}
+
+		// check for permissions required
+		if (!isPermissionRequired) {
+			return next()
+		}
+
+		// validate roleId
+		if (isNaN(roleId) || Number(roleId) !== Role.SUPER_ADMIN) {
+			return next({
+				statusCode: 403,
+				message: "Forbidden request"
+			})
+		}
+
+		next()
 	}
 }
 

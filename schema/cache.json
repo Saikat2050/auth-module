@@ -123,9 +123,9 @@
     }
   },
   "/v1/user": {
-    "hash": "8152215e64dc01de46d6f7da67eb44def63a7c6a",
+    "hash": "75f30fdc2ecd1d1ba71bc72eda4bf9cc16a044c1",
     "schemas": {
-      "/v1/user/update-user": {
+      "/v1/user/update": {
         "additionalProperties": false,
         "type": "object",
         "properties": {
@@ -181,7 +181,7 @@
         ],
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
-      "/v1/user/list-user": {
+      "/v1/user/list": {
         "type": "object",
         "properties": {
           "filter": {
@@ -270,7 +270,7 @@
         },
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
-      "/v1/user/delete-user": {
+      "/v1/user/delete": {
         "type": "object",
         "properties": {
           "_id": {
@@ -284,6 +284,168 @@
         "required": [
           "_id",
           "password"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
+  },
+  "/v1/black-list": {
+    "hash": "34804cfd71d4b133c51e7ff3330aeee6aa1714a8",
+    "schemas": {
+      "/v1/black-list/create": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/definitions/BlackListStatus"
+          },
+          "remark": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "userId"
+        ],
+        "definitions": {
+          "BlackListStatus": {
+            "type": "string",
+            "enum": [
+              "permanent",
+              "temporary"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "/v1/black-list/update": {
+        "additionalProperties": false,
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "permanent",
+              "temporary"
+            ],
+            "type": "string"
+          },
+          "remark": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "/v1/black-list/list": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "userId": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "range": {
+            "$ref": "#/definitions/Partial<{page:number;pageSize:number;}>"
+          },
+          "sort": {
+            "type": "object",
+            "properties": {
+              "orderBy": {
+                "const": "userId",
+                "type": "string"
+              },
+              "orderDir": {
+                "enum": [
+                  -1,
+                  1
+                ],
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "search": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "definitions": {
+          "Partial<{page:number;pageSize:number;}>": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "number"
+              },
+              "pageSize": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "/v1/black-list/delete": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "_id"
         ],
         "$schema": "http://json-schema.org/draft-07/schema#"
       }

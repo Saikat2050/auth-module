@@ -7,7 +7,7 @@ import _ from "lodash"
 import {SearchPattern} from "../lib/SearchPattern"
 import errorData from "../constants/errorData.json"
 
-import {UserUpdatePayload, ListUserPayload} from "../types/users"
+import {UpdateUserPayload, ListUserPayload} from "../types/users"
 import {ApiResponse} from "../helpers/ApiResponse"
 import {generatePipeline} from "../helpers/helper"
 
@@ -21,12 +21,14 @@ class UserController {
 	public async update(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const {_id, ...inputData}: UserUpdatePayload = req.body
+			let {_id, ...inputData}: UpdateUserPayload = req.body
+
+			_id = (req.headers.userId ?? "").toString().trim()
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
 
-			const listUserData = await User.findById({_id})
+			const listUserData = await User.findById(_id)
 			if (!listUserData) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
@@ -121,7 +123,7 @@ class UserController {
 				)
 			])
 
-			let [data, [{total}]] = await Promise.all([
+			const [data, [{total}]] = await Promise.all([
 				User.aggregate(pipeline, {
 					allowDiskUse: true
 				}),
@@ -200,7 +202,10 @@ class UserController {
 			}
 
 			// delete
-			await User.findByIdAndUpdate(_id, {isDeleted: true})
+			await User.findByIdAndUpdate(_id, {
+				isDeleted: true,
+				isActive: false
+			})
 
 			// await dbConnection.deleteModel("User")
 
