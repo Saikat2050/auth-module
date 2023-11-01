@@ -133,6 +133,9 @@ class Validator {
 				userDetails = await client.hGetAll(slugName)
 			}
 
+			userDetails = JSON.stringify(userDetails, null, 2)
+			userDetails = JSON.parse(userDetails)
+
 			// userID
 			req.headers.userId = userDetails._id.toString()
 
