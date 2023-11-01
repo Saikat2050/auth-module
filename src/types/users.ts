@@ -22,7 +22,7 @@ export type UserTableData = {
 
 export type UserDetails = Omit<UserTableData, "password">
 
-export type UserUpdateAPIPayload = {
+export type UpdateUserAPIPayload = {
 	_id: string
 } & Partial<{
 	name: string
@@ -40,7 +40,7 @@ export type UserUpdateAPIPayload = {
 	postalCode: string
 }>
 
-export type UserUpdatePayload = {
+export type UpdateUserPayload = {
 	_id: string
 } & Partial<{
 	name: string

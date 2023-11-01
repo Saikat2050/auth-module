@@ -141,6 +141,7 @@ app.use(helmet.xssFilter())
 // middlewares
 app.use(Validator.schemaValidation)
 app.use(Validator.validateToken)
+app.use(Validator.roleValidation)
 app.use(routes)
 app.use(Sentry.Handlers.errorHandler())
 app.use("*", ApiMiddlewares.middleware404)

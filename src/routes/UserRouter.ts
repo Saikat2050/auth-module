@@ -8,8 +8,8 @@ export class UserRouter {
 	constructor() {
 		this.router = express.Router()
 		this.router
-			.post("/update-user", UserController.update)
-			.post("/list-user", UserController.list)
-			.post("/delete-user", UserController.delete)
+			.post("/update", UserController.update)
+			.post("/list", UserController.list)
+			.post("/delete", UserController.delete)
 	}
 }

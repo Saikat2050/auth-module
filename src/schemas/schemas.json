@@ -40,22 +40,52 @@
     "basePath": "/v1/user",
     "schemas": [
       {
-        "apiPath": "/v1/user/update-user",
+        "apiPath": "/v1/user/update",
         "method": "POST",
         "source": "types/users.ts",
-        "schema": "UserUpdateAPIPayload"
+        "schema": "UpdateUserAPIPayload"
       },
       {
-        "apiPath": "/v1/user/list-user",
+        "apiPath": "/v1/user/list",
         "method": "POST",
         "source": "types/users.ts",
         "schema": "ListUserPayload"
       },
       {
-        "apiPath": "/v1/user/delete-user",
+        "apiPath": "/v1/user/delete",
         "method": "POST",
         "source": "types/users.ts",
         "schema": "DeleteUserPayload"
+      }
+    ]
+  },
+  {
+    "source": "types/black-list.ts",
+    "basePath": "/v1/black-list",
+    "schemas": [
+      {
+        "apiPath": "/v1/black-list/create",
+        "method": "POST",
+        "source": "types/black-list.ts",
+        "schema": "CreateBlackListApiPayload"
+      },
+      {
+        "apiPath": "/v1/black-list/update",
+        "method": "POST",
+        "source": "types/black-list.ts",
+        "schema": "UpdateBlackListApiPayload"
+      },
+      {
+        "apiPath": "/v1/black-list/list",
+        "method": "POST",
+        "source": "types/black-list.ts",
+        "schema": "ListBlackListPayload"
+      },
+      {
+        "apiPath": "/v1/black-list/delete",
+        "method": "POST",
+        "source": "types/black-list.ts",
+        "schema": "DeleteBlackListPayload"
       }
     ]
   }

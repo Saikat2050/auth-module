@@ -11,7 +11,8 @@ import {
 	SendOtpPayload,
 	ResetPasswordPayload,
 	verifyOtpPayload,
-	secretCodeSchema
+	secretCodeSchema,
+	Role
 } from "../types/auth"
 import helper, {decryptBycrypto, encryptionByCrypto} from "../helpers/helper"
 import {ApiResponse} from "../helpers/ApiResponse"
@@ -32,6 +33,15 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 			const inputData: RegisterPayload = req.body
+			
+			// validation for roles
+			const roles: number[] = Object.values(Role).map((el) => Number(el)).filter((el) => !isNaN(el))
+			if (roles.indexOf(Number(inputData.roleId)) < 0) {
+				return response.errorResponse({
+					...errorData.BAD_REQUEST,
+					message: "Invalid Role"
+				})
+			}
 
 			const [isValidEmail, isValidPhone, isValidPassword]: [
 				boolean,
