@@ -97,6 +97,12 @@ class Validator {
 			const slugName: string = `${slug}:${userId}`
 			let userDetails = await client.hGetAll(slugName)
 
+			// check for user details
+			let userDetailsArr = Object.keys(userDetails)
+			if (!userDetailsArr?.length) {
+				userDetails = null
+			}
+
 			if (!userDetails) {
 				const dbConnection = new DbConnection(slug)
 				const User = await dbConnection.getModel(userSchema, "User")
