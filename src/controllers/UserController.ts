@@ -22,7 +22,7 @@ class UserController {
 		try {
 			const response = new ApiResponse(res)
 			let {_id, ...inputData}: UpdateUserPayload = req.body
-			
+
 			_id = (req.headers.userId ?? "").toString().trim()
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
@@ -202,7 +202,10 @@ class UserController {
 			}
 
 			// delete
-			await User.findByIdAndUpdate(_id, {isDeleted: true, isActive: false})
+			await User.findByIdAndUpdate(_id, {
+				isDeleted: true,
+				isActive: false
+			})
 
 			// await dbConnection.deleteModel("User")
 
