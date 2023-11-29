@@ -22,5 +22,9 @@
 	{
 		"apiPath": "/v1/auth/register",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/role/list",
+		"method": "POST"
 	}
 ]

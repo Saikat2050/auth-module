@@ -3,11 +3,15 @@ import userSchema from "../models/users"
 import {DbConnection} from "../lib/DbConnection"
 import bcrypt from "bcrypt"
 import _ from "lodash"
+import SlugValidation from "../middleware/SlugValidation"
 
 import {SearchPattern} from "../lib/SearchPattern"
 import errorData from "../constants/errorData.json"
 
+import mongoose from "mongoose"
+
 import {UpdateUserPayload, ListUserPayload} from "../types/users"
+import roleSchema from "../models/roles"
 import {ApiResponse} from "../helpers/ApiResponse"
 import {generatePipeline} from "../helpers/helper"
 
@@ -29,7 +33,7 @@ class UserController {
 			const User = await dbConnection.getModel(userSchema, "User")
 
 			const listUserData = await User.findById(_id)
-			if (!listUserData) {
+			if (!listUserData || Boolean(listUserData?.isDeleted) === true) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "User not found"
@@ -39,7 +43,7 @@ class UserController {
 			// update
 			if (req.body.email) {
 				inputData.email = req.body.email.email
-				inputData.isVerified = false
+				inputData.isEmailVerified = false
 
 				const isValidPassword: boolean = await bcrypt.compare(
 					req.body.email.password,
@@ -52,9 +56,56 @@ class UserController {
 					})
 				}
 			}
+
+			if (req.body.mobile) {
+				inputData.mobile = req.body.mobile.mobile
+				inputData.isMobileVerified = false
+
+				const isValidPassword: boolean = await bcrypt.compare(
+					req.body.mobile.password,
+					listUserData.password
+				)
+				if (!isValidPassword) {
+					return response.errorResponse({
+						statusCode: 401,
+						message: "Unauthorized"
+					})
+				}
+			}
+
+			if (inputData.roleId) {
+				const Role = await dbConnection.getModel(roleSchema, "Role")
+				const listRoleData = await Role.findById(inputData.roleId)
+				if (
+					!listRoleData ||
+					Boolean(listRoleData?.isDeleted) === true
+				) {
+					return response.errorResponse({
+						...errorData.NOT_FOUND,
+						message: "Role not found"
+					})
+				}
+			}
+
 			await User.findByIdAndUpdate(_id, inputData)
 
 			// await dbConnection.deleteModel("User")
+
+			// update cache
+			let client: any = null
+			try {
+				client = await SlugValidation.getClient()
+			} catch (err) {
+				next({
+					statusCode: 500,
+					code: `internal_server_error`,
+					message: err?.toString()
+				})
+			}
+
+			const slugName: string = `${req.headers.slug}:${req.headers.userId}`
+
+			await client.del(slugName)
 
 			return response.successResponse({
 				message: "User updated successfully"
@@ -71,6 +122,29 @@ class UserController {
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
+			let customFilter: any = {}
+
+			if (filter?.roleId) {
+				let roleId: any = undefined
+				if (typeof filter.roleId === "object") {
+					const ids = filter.roleId.map(
+						(el) => new mongoose.Types.ObjectId(el)
+					)
+
+					roleId = {
+						$in: ids
+					}
+				} else {
+					roleId = new mongoose.Types.ObjectId(filter.roleId)
+				}
+
+				customFilter = {
+					...customFilter,
+					roleId
+				}
+
+				filter.roleId = undefined
+			}
 
 			// const data = await User.find(filterObject)
 			// 	.sort(sortObject)
@@ -95,7 +169,8 @@ class UserController {
 					// ],
 					["password", "secretCode"],
 					{
-						isActive: true
+						isActive: true,
+						...customFilter
 					}
 				),
 				generatePipeline(
@@ -114,7 +189,8 @@ class UserController {
 					// ],
 					["password", "secretCode"],
 					{
-						isActive: true
+						isActive: true,
+						...customFilter
 					},
 					undefined,
 					undefined,
@@ -123,7 +199,7 @@ class UserController {
 				)
 			])
 
-			const [data, [{total}]] = await Promise.all([
+			let [data, [total]] = await Promise.all([
 				User.aggregate(pipeline, {
 					allowDiskUse: true
 				}),
@@ -131,6 +207,18 @@ class UserController {
 					allowDiskUse: true
 				})
 			])
+
+			total = Number(total?.total) || 0
+
+			const Role = await dbConnection.getModel(roleSchema, "Role")
+			data = await Role.populate(data, {
+				path: "roleId",
+				select: {
+					_id: 1,
+					slug: 1,
+					title: 1
+				}
+			})
 
 			let searchedData: any[] = []
 			if ((search ?? "").toString().trim() !== "") {
@@ -183,7 +271,7 @@ class UserController {
 			// check if user exist
 			const userDetails = await User.findById(_id)
 
-			if (!userDetails) {
+			if (!userDetails || Boolean(userDetails?.isDeleted) === true) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "User not found"
@@ -206,6 +294,22 @@ class UserController {
 				isDeleted: true,
 				isActive: false
 			})
+
+			// update cache
+			let client: any = null
+			try {
+				client = await SlugValidation.getClient()
+			} catch (err) {
+				next({
+					statusCode: 500,
+					code: `internal_server_error`,
+					message: err?.toString()
+				})
+			}
+
+			const slugName: string = `${req.headers.slug}:${req.headers.userId}`
+
+			await client.del(slugName)
 
 			// await dbConnection.deleteModel("User")
 

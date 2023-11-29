@@ -2,22 +2,9 @@ import mongoose from "mongoose"
 import uniqueValidator from "mongoose-unique-validator"
 const Schema = mongoose.Schema
 
-const useDbOptions = {
-	//ensures connections to the same databases are cached
-	useCache: true,
-	//remove event listeners from the main connection
-	noListener: true
-}
-
-const dbName = mongoose.connection.useDb(
-	process.env.MONGODB_MAIN_DB_NAME as string,
-	useDbOptions
-)
-
 const blackListSchema = new Schema(
 	{
-		slug: {type: String, required: true},
-		userId: {type: String, required: true},
+		userId: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 		status: {type: String, required: true, default: "temporary"},
 		remark: {type: String, required: false},
 		isDeleted: {type: Boolean, default: false}
@@ -26,5 +13,4 @@ const blackListSchema = new Schema(
 )
 blackListSchema.plugin(uniqueValidator)
 
-const BlackList = dbName.model("BlackList", blackListSchema)
-export default BlackList
+export default blackListSchema

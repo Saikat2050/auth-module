@@ -14,5 +14,17 @@
 	{
 		"apiPath": "/v1/black-list/delete",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/role/create",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/role/update",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/role/delete",
+		"method": "POST"
 	}
 ]

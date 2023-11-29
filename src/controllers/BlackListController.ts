@@ -1,9 +1,11 @@
 import {Request, Response, NextFunction} from "express"
-import BlackList from "../models/blackList"
+import blackListSchema from "../models/blackList"
 import userSchema from "../models/users"
 import {DbConnection} from "../lib/DbConnection"
+import mongoose from "mongoose"
 import _ from "lodash"
 
+import SlugValidation from "../middleware/SlugValidation"
 import {SearchPattern} from "../lib/SearchPattern"
 import errorData from "../constants/errorData.json"
 
@@ -28,13 +30,11 @@ class BlackListController {
 			const response = new ApiResponse(res)
 			const inputData: CreateBlackListPayload = req.body
 
-			inputData.slug = (req.headers.slug ?? "").toString().trim()
-
-			const dbConnection = new DbConnection(inputData.slug as string)
+			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
 
 			const listUserData = await User.findById(inputData.userId)
-			if (!listUserData) {
+			if (!listUserData || Boolean(listUserData?.isDeleted) === true) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "User not found"
@@ -43,7 +43,30 @@ class BlackListController {
 
 			// await dbConnection.deleteModel("User")
 
-			const data = await BlackList.create(inputData)
+			const BlackList = await dbConnection.getModel(
+				blackListSchema,
+				"BlackList"
+			)
+			const data = await BlackList.create({
+				...inputData,
+				userId: new mongoose.Types.ObjectId(inputData.userId)
+			})
+
+			// update cache
+			let client: any = null 
+			try {
+				client = await SlugValidation.getClient()
+			} catch (err) {
+				next({
+					statusCode: 500,
+					code: `internal_server_error`,
+					message: err?.toString()
+				})
+			}
+
+			const slugName: string = `${req.headers.slug}:${inputData.userId}`
+
+			await client.del(slugName)
 
 			return response.successResponse({
 				message: "User added to black-list successfully",
@@ -57,12 +80,18 @@ class BlackListController {
 	public async update(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const {_id, ...inputData}: UpdateBlackListPayload = req.body
+			let {_id, ...inputData}: any = req.body
 
-			inputData.slug = (req.headers.slug ?? "").toString().trim()
-
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const BlackList = await dbConnection.getModel(
+				blackListSchema,
+				"BlackList"
+			)
 			const listBlackListData = await BlackList.findById(_id)
-			if (!listBlackListData) {
+			if (
+				!listBlackListData ||
+				Boolean(listBlackListData?.isDeleted) === true
+			) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "Black listed user not found"
@@ -70,18 +99,43 @@ class BlackListController {
 			}
 
 			if (inputData.userId) {
-				const dbConnection = new DbConnection(inputData.slug as string)
+				const dbConnection = new DbConnection(
+					req.headers.slug as string
+				)
 				const User = await dbConnection.getModel(userSchema, "User")
 
 				const listUserData = await User.findById(inputData.userId)
-				if (!listUserData) {
+				if (
+					!listUserData ||
+					Boolean(listUserData?.isDeleted) === true
+				) {
 					return response.errorResponse({
 						...errorData.NOT_FOUND,
 						message: "User not found"
 					})
 				}
 
-				// await dbConnection.deleteModel("User")s
+				inputData = {
+					...inputData,
+					userId: new mongoose.Types.ObjectId(inputData.userId)
+				}
+				// await dbConnection.deleteModel("User")
+
+				// update cache
+				let client: any = null
+				try {
+					client = await SlugValidation.getClient()
+				} catch (err) {
+					next({
+						statusCode: 500,
+						code: `internal_server_error`,
+						message: err?.toString()
+					})
+				}
+
+				const slugName: string = `${req.headers.slug}:${inputData.userId}`
+
+				await client.del(slugName)
 			}
 
 			await BlackList.findByIdAndUpdate(_id, inputData)
@@ -99,16 +153,51 @@ class BlackListController {
 	public async list(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const {filter, range, sort, search}: ListBlackListPayload = req.body
+			let {filter, range, sort, search}: ListBlackListPayload = req.body
+
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const BlackList = await dbConnection.getModel(
+				blackListSchema,
+				"BlackList"
+			)
+			let customFilter: any = {}
+
+			if (filter?.userId) {
+				let userId: any = undefined
+				if (typeof filter.userId === "object") {
+					const ids = filter.userId.map(
+						(el) => new mongoose.Types.ObjectId(el)
+					)
+
+					userId = {
+						$in: ids
+					}
+				} else {
+					userId = new mongoose.Types.ObjectId(filter.userId)
+				}
+
+				customFilter = {
+					...customFilter,
+					userId
+				}
+
+				filter.userId = undefined
+			}
 
 			const [pipeline, countPipeline] = await Promise.all([
-				generatePipeline(filter ?? {}, range, sort),
 				generatePipeline(
 					filter ?? {},
 					range,
 					sort,
 					undefined,
+					customFilter
+				),
+				generatePipeline(
+					filter ?? {},
+					range,
+					sort,
 					undefined,
+					customFilter,
 					undefined,
 					undefined,
 					undefined,
@@ -116,7 +205,7 @@ class BlackListController {
 				)
 			])
 
-			const [data, [{total}]] = await Promise.all([
+			let [data, [total]] = await Promise.all([
 				BlackList.aggregate(pipeline, {
 					allowDiskUse: true
 				}),
@@ -125,11 +214,22 @@ class BlackListController {
 				})
 			])
 
+			total = Number(total?.total) || 0
+
+			const User = await dbConnection.getModel(userSchema, "User")
+			data = await User.populate(data, {
+				path: "userId",
+				select: {
+					_id: 1,
+					name: 1,
+					email: 1,
+					roleId: 1
+				}
+			})
+
 			let searchedData: any[] = []
 			if ((search ?? "").toString().trim() !== "") {
 				const searchPattern = new SearchPattern(search as string, [
-					"slug",
-					"userId",
 					"status",
 					"remark"
 				])
@@ -165,9 +265,14 @@ class BlackListController {
 			}
 
 			// check if user exist
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const BlackList = await dbConnection.getModel(
+				blackListSchema,
+				"BlackList"
+			)
 			const userDetails = await BlackList.findById(_id)
 
-			if (!userDetails) {
+			if (!userDetails || Boolean(userDetails?.isDeleted) === true) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "Black listed user not found"

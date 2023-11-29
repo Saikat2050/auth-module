@@ -13,6 +13,7 @@ import morgan from "morgan"
 import * as Sentry from "@sentry/node"
 import {ProfilingIntegration} from "@sentry/profiling-node"
 import eventEmitter from "./lib/logging"
+import Seeder from "./lib/Seeder"
 // import * as cron from "node-cron"
 
 /* Routes */
@@ -20,6 +21,7 @@ import routes from "./routes/MainRouter"
 
 /* Middlewares */
 import ApiMiddlewares from "./middleware/ApiMiddlewares"
+import ProxyMiddleware from "./middleware/ProxyMiddleware"
 import Validator from "./middleware/Validator"
 import SlugValidation from "./middleware/SlugValidation"
 import {generateSchema} from "./lib/schemaGenerator"
@@ -143,6 +145,7 @@ app.use(Validator.schemaValidation)
 app.use(Validator.validateToken)
 app.use(Validator.roleValidation)
 app.use(routes)
+app.use(ProxyMiddleware.ProxyMiddleware)
 app.use(Sentry.Handlers.errorHandler())
 app.use("*", ApiMiddlewares.middleware404)
 app.use(ApiMiddlewares.exceptionHandler)
@@ -151,6 +154,9 @@ app.use(ApiMiddlewares.exceptionHandler)
 app.listen(PORT, async () => {
 	// generate schema
 	generateSchema()
+
+	// run seeder
+	Seeder.runSeeder()
 
 	eventEmitter.emit("logging", `Auth API is up and running on ${PORT}`)
 })

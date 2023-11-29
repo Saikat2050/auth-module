@@ -30,7 +30,9 @@ export default {
 	encryptionByCrypto,
 	decryptBycrypto,
 	sendOtpToEmail,
-	generatePipeline
+	generatePipeline,
+	diagnoseUserName,
+	createSlug
 }
 
 export async function generateOtp() {
@@ -318,4 +320,55 @@ export async function generatePipeline(
 	}
 
 	return pipeline
+}
+
+export async function diagnoseUserName (userName: string) {
+	const authDetails = {
+		email: false,
+		mobile: false
+	}
+
+	userName = userName.replace(/s/g, '')
+
+	if (!isNaN(Number(userName))) {
+		authDetails.mobile = true
+	} else if (userName.includes("@")) {
+		authDetails.email = true
+	}
+
+	return authDetails
+}
+
+export function createSlug(datas: any[], fieldName: string, name: string) {
+	let slug: string = name
+		.trim()
+		.replace(/\s\s+/g, " ")
+		.replace(/[^a-zA-Z0-9_ ]/g, "")
+		.replace(/\s/g, "-")
+		.replace(/_/g, "-")
+		.toLowerCase()
+	let functionCalled: number = 0
+	let duplicateSlug: boolean = false
+
+	do {
+		duplicateSlug = false
+
+		if (functionCalled === 1) {
+			slug = `${slug}-${functionCalled}`
+		} else if (functionCalled > 1) {
+			slug = slug.replace(/\d+$/, `${functionCalled}`)
+		}
+
+		const duplicateSlugValue =
+			datas.find(
+				(el) => el[fieldName].toString().trim() === slug.toString().trim()
+			) ?? null
+
+		if (duplicateSlugValue) {
+			duplicateSlug = true
+		}
+
+		functionCalled += 1
+	} while (duplicateSlug)
+	return slug
 }

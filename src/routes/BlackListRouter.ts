@@ -8,7 +8,7 @@ export class BlackListRouter {
 	constructor() {
 		this.router = express.Router()
 		this.router
-			.post("/create", BlackListController.update)
+			.post("/create", BlackListController.create)
 			.post("/update", BlackListController.update)
 			.post("/list", BlackListController.list)
 			.post("/delete", BlackListController.delete)

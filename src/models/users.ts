@@ -12,8 +12,8 @@ const userSchema = new Schema(
 			type: String,
 			required: true
 		},
-		roleId: {type: Number, required: true},
-		mobile: {type: Number, required: false},
+		roleId: [{ type: Schema.Types.ObjectId, ref: 'Role' }],
+		mobile: {type: String, required: true},
 		password: {type: String, required: true},
 		dob: {type: Date, required: false},
 		address: {type: String, required: false},
@@ -23,7 +23,8 @@ const userSchema = new Schema(
 		postalCode: {type: String, required: false},
 		secretCode: {type: String, required: false},
 		lastActivatedOn: {type: Date, required: false},
-		isVerified: {type: Boolean, default: false},
+		isEmailVerified: {type: Boolean, default: false},
+		isMobileVerified: {type: Boolean, default: false},
 		isActive: {type: Boolean, default: true},
 		isDeleted: {type: Boolean, default: false}
 	},
