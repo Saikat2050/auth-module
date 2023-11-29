@@ -30,21 +30,22 @@ class RoleController {
 		try {
 			const response = new ApiResponse(res)
 			const inputData: CreateRolePayload = req.body
-			
+
 			const dbConnection = new DbConnection(req.headers.slug as string)
 			// await dbConnection.deleteModel("User")
-			
-			const Role = await dbConnection.getModel(
-				roleSchema,
-				"Role"
-				)
+
+			const Role = await dbConnection.getModel(roleSchema, "Role")
 
 			const roleData = await Role.find({
 				isDeleted: false
 			})
-			
-			const slug: string = await createSlug(roleData, "slug", inputData.title)
-			
+
+			const slug: string = await createSlug(
+				roleData,
+				"slug",
+				inputData.title
+			)
+
 			const data = await Role.create({
 				...inputData,
 				slug
@@ -63,18 +64,12 @@ class RoleController {
 		try {
 			const response = new ApiResponse(res)
 			const {_id, ...inputData}: UpdateRolePayload = req.body
-			let slug : string | undefined = undefined
+			let slug: string | undefined = undefined
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
-			const Role = await dbConnection.getModel(
-				roleSchema,
-				"Role"
-			)
+			const Role = await dbConnection.getModel(roleSchema, "Role")
 			const listRoleData = await Role.findById(_id)
-			if (
-				!listRoleData ||
-				Boolean(listRoleData?.isDeleted) === true
-			) {
+			if (!listRoleData || Boolean(listRoleData?.isDeleted) === true) {
 				return response.errorResponse({
 					...errorData.NOT_FOUND,
 					message: "Role not found"
@@ -110,17 +105,10 @@ class RoleController {
 			const {filter, range, sort, search}: ListRolePayload = req.body
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
-			const Role = await dbConnection.getModel(
-				roleSchema,
-				"Role"
-			)
+			const Role = await dbConnection.getModel(roleSchema, "Role")
 
 			const [pipeline, countPipeline] = await Promise.all([
-				generatePipeline(
-					filter ?? {},
-					range,
-					sort
-				),
+				generatePipeline(filter ?? {}, range, sort),
 				generatePipeline(
 					filter ?? {},
 					range,
@@ -184,10 +172,7 @@ class RoleController {
 
 			// check if user exist
 			const dbConnection = new DbConnection(req.headers.slug as string)
-			const Role = await dbConnection.getModel(
-				roleSchema,
-				"Role"
-			)
+			const Role = await dbConnection.getModel(roleSchema, "Role")
 			const roleDetails = await Role.findById(_id)
 
 			if (!roleDetails || Boolean(roleDetails?.isDeleted) === true) {

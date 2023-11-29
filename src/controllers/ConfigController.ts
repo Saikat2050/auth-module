@@ -26,9 +26,13 @@ class ConfigController {
 			const response = new ApiResponse(res)
 			const inputData: CreateConfigPayload = req.body
 
-			const configs = await Config.find({isDeleted: false}) 
-			const slug: string = await createSlug(configs, "slug", inputData.title)
-			
+			const configs = await Config.find({isDeleted: false})
+			const slug: string = await createSlug(
+				configs,
+				"slug",
+				inputData.title
+			)
+
 			const data = await Config.create({
 				...inputData,
 				slug

@@ -12,7 +12,7 @@ const userSchema = new Schema(
 			type: String,
 			required: true
 		},
-		roleId: [{ type: Schema.Types.ObjectId, ref: 'Role' }],
+		roleId: [{type: Schema.Types.ObjectId, ref: "Role"}],
 		mobile: {type: String, required: true},
 		password: {type: String, required: true},
 		dob: {type: Date, required: false},

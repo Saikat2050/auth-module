@@ -53,7 +53,7 @@ class BlackListController {
 			})
 
 			// update cache
-			let client: any = null 
+			let client: any = null
 			try {
 				client = await SlugValidation.getClient()
 			} catch (err) {

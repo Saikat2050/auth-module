@@ -10,7 +10,7 @@ let redisClientConfig: any = {
 	socket: {
 		host: process.env.REDIS_SERVER_HOST as string,
 		port: Number(process.env.REDIS_SERVER_PORT),
-		tls: false,
+		tls: false
 		// key: readFileSync('./redis_user_private.key'),
 		// cert: readFileSync('./redis_user.crt'),
 		// ca: [readFileSync('./redis_ca.pem')]
@@ -33,16 +33,16 @@ class SlugValidation {
 			}
 
 			this.client = createClient(redisClientConfig)
-			
+
 			this.client.on("error", (err) => {
 				eventEmitter.emit("logging", err.toString())
 				throw err
 				// process.exit()
 			})
-	
+
 			await this.client.connect()
 			next()
-		} catch(error) {
+		} catch (error) {
 			eventEmitter.emit("logging", error?.toString())
 			next({
 				statusCode: 500,
@@ -64,9 +64,9 @@ class SlugValidation {
 					message: "Missing slug header"
 				})
 			}
-	
+
 			let serverConfig = await this.client.hGetAll(slug)
-	
+
 			// check for server configuration
 			let serverConfigArr = Object.keys(serverConfig)
 			if (!serverConfigArr?.length) {
@@ -77,7 +77,7 @@ class SlugValidation {
 					slug,
 					isDeleted: false
 				})
-	
+
 				if (!slugData) {
 					next({
 						statusCode: 401,
@@ -89,18 +89,18 @@ class SlugValidation {
 						typeof slugData?.config === "string"
 							? JSON.parse(slugData?.config)
 							: slugData?.config
-	
+
 					await this.client.hSet(slug, configData)
-	
+
 					serverConfig = await this.client.hGetAll(slug)
 				}
 			}
-	
+
 			serverConfig = JSON.stringify(serverConfig, null, 2)
-	
+
 			req.headers.serverConfig = serverConfig
 			next()
-		} catch(error) {
+		} catch (error) {
 			eventEmitter.emit("logging", error?.toString())
 			next({
 				statusCode: 500,
@@ -125,9 +125,9 @@ class SlugValidation {
 				throw err
 				// process.exit()
 			})
-	
+
 			return await this.client.connect()
-		} catch(error) {
+		} catch (error) {
 			eventEmitter.emit("logging", error?.toString())
 			throw error
 			// process.exit()

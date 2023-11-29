@@ -33,4 +33,4 @@ export type Project = {
 	}
 }
 
-export const allowedOperations= ["SELECT", "UPDATE", "INSERT", "DELETE"]
+export const allowedOperations = ["SELECT", "UPDATE", "INSERT", "DELETE"]

@@ -322,13 +322,13 @@ export async function generatePipeline(
 	return pipeline
 }
 
-export async function diagnoseUserName (userName: string) {
+export async function diagnoseUserName(userName: string) {
 	const authDetails = {
 		email: false,
 		mobile: false
 	}
 
-	userName = userName.replace(/s/g, '')
+	userName = userName.replace(/s/g, "")
 
 	if (!isNaN(Number(userName))) {
 		authDetails.mobile = true
@@ -361,7 +361,8 @@ export function createSlug(datas: any[], fieldName: string, name: string) {
 
 		const duplicateSlugValue =
 			datas.find(
-				(el) => el[fieldName].toString().trim() === slug.toString().trim()
+				(el) =>
+					el[fieldName].toString().trim() === slug.toString().trim()
 			) ?? null
 
 		if (duplicateSlugValue) {

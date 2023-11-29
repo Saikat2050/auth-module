@@ -14,7 +14,7 @@ export type ConfigTableData = {
 	slug: string
 	config: DBConfig
 	isActive: boolean
-	isDeleted: boolean 
+	isDeleted: boolean
 } & Range &
 	OrderDir
 

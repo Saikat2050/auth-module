@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 
 const roleSchema = new Schema(
 	{
-		slug: {type: String, unique : true, required: true, dropDups: true},
+		slug: {type: String, unique: true, required: true, dropDups: true},
 		title: {type: String, required: true},
 		isDeleted: {type: Boolean, default: false}
 	},

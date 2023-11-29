@@ -11,26 +11,26 @@ class ProxyMiddleware {
 	) {
 		try {
 			const router = express.Router()
-		const envVariableName: string | undefined = req.headers.slug
-			?.toString()
-			.trim()
-			.toUpperCase()
+			const envVariableName: string | undefined = req.headers.slug
+				?.toString()
+				.trim()
+				.toUpperCase()
 
-		const proxyRoute = process.env[`${envVariableName}`]
+			const proxyRoute = process.env[`${envVariableName}`]
 
-		console.log("saikat proxyRoute", proxyRoute)
+			console.log("saikat proxyRoute", proxyRoute)
 
-		router.use(
-			proxy(proxyRoute, {
-				proxyReqPathResolver: function (req: Request) {
-					return req.originalUrl
-				}
-			})
-		)
+			router.use(
+				proxy(proxyRoute, {
+					proxyReqPathResolver: function (req: Request) {
+						return req.originalUrl
+					}
+				})
+			)
 
-		console.log("saikat is getting ok")
-		next()
-		} catch(error) {
+			console.log("saikat is getting ok")
+			next()
+		} catch (error) {
 			console.log("saikat is getting error", error)
 			next()
 		}
