@@ -3,7 +3,7 @@ import {Range, OrderDir} from "./common"
 export type UserTableData = {
 	name: string
 	email: string
-	roleId: number
+	roleId: string
 	mobile: string
 	password: string
 	dob: string
@@ -14,7 +14,7 @@ export type UserTableData = {
 	postalCode: string
 	secretCode: string
 	lastActivatedOn: string
-	isVerified: boolean
+	isEmailVerified: boolean
 	isActive: boolean
 	isDeleted: boolean
 } & Range &
@@ -30,8 +30,11 @@ export type UpdateUserAPIPayload = {
 		email: string
 		password: string
 	}
-	roleId: number
-	mobile: string
+	roleId: string
+	mobile: {
+		mobile: string
+		password: string
+	}
 	dob: string
 	address: string
 	city: string
@@ -45,7 +48,7 @@ export type UpdateUserPayload = {
 } & Partial<{
 	name: string
 	email: string
-	roleId: number
+	roleId: string
 	mobile: string
 	dob: string
 	address: string
@@ -53,7 +56,8 @@ export type UpdateUserPayload = {
 	state: string
 	country: string
 	postalCode: string
-	isVerified: boolean
+	isEmailVerified: boolean
+	isMobileVerified: boolean
 }>
 
 export type DeleteUserPayload = {
@@ -63,7 +67,7 @@ export type DeleteUserPayload = {
 
 type FilterPayload = {
 	_id?: string | string[]
-	roleId?: number | number[]
+	roleId?: string | string[]
 	email?: string | string[]
 }
 

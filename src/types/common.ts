@@ -32,3 +32,5 @@ export type Project = {
 		operation: any
 	}
 }
+
+export const allowedOperations = ["SELECT", "UPDATE", "INSERT", "DELETE"]

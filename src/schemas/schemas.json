@@ -88,5 +88,35 @@
         "schema": "DeleteBlackListPayload"
       }
     ]
+  },
+  {
+    "source": "types/roles.ts",
+    "basePath": "/v1/role",
+    "schemas": [
+      {
+        "apiPath": "/v1/role/create",
+        "method": "POST",
+        "source": "types/roles.ts",
+        "schema": "CreateRolePayload"
+      },
+      {
+        "apiPath": "/v1/role/update",
+        "method": "POST",
+        "source": "types/roles.ts",
+        "schema": "UpdateRolePayload"
+      },
+      {
+        "apiPath": "/v1/role/list",
+        "method": "POST",
+        "source": "types/roles.ts",
+        "schema": "ListRolePayload"
+      },
+      {
+        "apiPath": "/v1/role/delete",
+        "method": "POST",
+        "source": "types/roles.ts",
+        "schema": "DeleteRolePayload"
+      }
+    ]
   }
 ]

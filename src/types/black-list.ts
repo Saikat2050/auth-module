@@ -6,7 +6,6 @@ export enum BlackListStatus {
 }
 
 export type BlackListTableData = {
-	slug: string
 	userId: string
 	status: string
 	remark: string
@@ -25,7 +24,6 @@ export type CreateBlackListApiPayload = {
 }
 
 export type CreateBlackListPayload = {
-	slug: string
 	userId: string
 	status: string
 	remark: string
@@ -42,7 +40,6 @@ export type UpdateBlackListApiPayload = {
 export type UpdateBlackListPayload = {
 	_id: string
 } & Partial<{
-	slug: string
 	userId: string
 	status: string
 	remark: string

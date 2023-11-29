@@ -3,7 +3,9 @@ import moment from "moment"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import userSchema from "../models/users"
+import roleSchema from "../models/roles"
 import {DbConnection} from "../lib/DbConnection"
+import mongoose from "mongoose"
 
 import {
 	SignInPayload,
@@ -11,10 +13,14 @@ import {
 	SendOtpPayload,
 	ResetPasswordPayload,
 	verifyOtpPayload,
-	secretCodeSchema,
-	Role
+	secretCodeSchema
 } from "../types/auth"
-import helper, {decryptBycrypto, encryptionByCrypto} from "../helpers/helper"
+import helper, {
+	decryptBycrypto,
+	diagnoseUserName,
+	encryptionByCrypto,
+	sendSMS
+} from "../helpers/helper"
 import {ApiResponse} from "../helpers/ApiResponse"
 import errorData from "../constants/errorData.json"
 import eventEmitter from "../lib/logging"
@@ -35,13 +41,13 @@ class AuthController {
 			const inputData: RegisterPayload = req.body
 
 			// validation for roles
-			const roles: number[] = Object.values(Role)
-				.map((el) => Number(el))
-				.filter((el) => !isNaN(el))
-			if (roles.indexOf(Number(inputData.roleId)) < 0) {
+			const dbConnection = new DbConnection(req.headers.slug as string)
+			const Role = await dbConnection.getModel(roleSchema, "Role")
+			const listRoleData = await Role.findById(inputData.roleId)
+			if (!listRoleData || Boolean(listRoleData?.isDeleted) === true) {
 				return response.errorResponse({
-					...errorData.BAD_REQUEST,
-					message: "Invalid Role"
+					...errorData.NOT_FOUND,
+					message: "Role not found"
 				})
 			}
 
@@ -79,7 +85,6 @@ class AuthController {
 				})
 			}
 
-			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
 
 			const [phoneExists, userExists] = await Promise.all([
@@ -121,6 +126,7 @@ class AuthController {
 			const data = await User.create(inputData)
 
 			// await dbConnection.deleteModel("User")
+			data.password = undefined
 
 			return response.successResponse({
 				message: "User created successfully",
@@ -135,14 +141,28 @@ class AuthController {
 	public async sendOtp(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const {email}: SendOtpPayload = req.body
+			const {userName}: SendOtpPayload = req.body
+			let userObj: any = {}
+
+			const verifyUserName = await diagnoseUserName(userName)
+
+			if (verifyUserName.email) {
+				userObj.email = userName
+			} else if (verifyUserName.mobile) {
+				userObj.mobile = userName
+			} else {
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "Invalid user-name"
+				})
+			}
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
 
 			//check if user exist
 			const userExists = await User.findOne({
-				email,
+				...userObj,
 				isDeleted: false,
 				isActive: true
 			})
@@ -163,18 +183,24 @@ class AuthController {
 								process.env.OTP_EXPIRATION_IN_MINUTES,
 								"minutes"
 							)
-							.format()
+							.format(),
+						verificationType: userObj.email || userObj.mobile
 					})
 				)
 			})
 
-			// send otp to email
-			await helper.sendOtpToEmail(
-				email,
-				Number(otpRandom),
-				userExists.name as string,
-				process.env.OTP_FILENAME as string
-			)
+			if (userObj.email) {
+				// send otp to email
+				await helper.sendOtpToEmail(
+					userObj.email,
+					Number(otpRandom),
+					userExists.name as string,
+					process.env.OTP_FILENAME as string
+				)
+			} else if (userObj.mobile) {
+				// send sms
+				await sendSMS(userObj.mobile, "")
+			}
 
 			// await dbConnection.deleteModel("User")
 
@@ -189,14 +215,28 @@ class AuthController {
 	public async verifyOtp(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
-			const {email, otp}: verifyOtpPayload = req.body
+			const {userName, otp}: verifyOtpPayload = req.body
+			let userObj: any = {}
+
+			const verifyUserName = await diagnoseUserName(userName)
+
+			if (verifyUserName.email) {
+				userObj.email = userName
+			} else if (verifyUserName.mobile) {
+				userObj.mobile = userName
+			} else {
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "Invalid user-name"
+				})
+			}
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
 
 			// check if otp is valid
 			const userExists = await User.findOne({
-				email,
+				...userObj,
 				isDeleted: false,
 				isActive: true
 			})
@@ -207,7 +247,7 @@ class AuthController {
 				})
 			}
 
-			// varify otp data
+			// verify otp data
 			if (userExists.secretCode) {
 				const decryptedData = await decryptBycrypto(
 					userExists.secretCode
@@ -221,9 +261,25 @@ class AuthController {
 					Number(otpData.otp) === Number(otp) &&
 					moment(otpData.expireIn).diff(moment()) >= 0
 				) {
-					await User.findByIdAndUpdate(userExists._id, {
-						isVerified: true
-					})
+					if (
+						otpData.verificationType.toString().trim() ===
+						userName.toString().trim()
+					) {
+						if (userObj.email) {
+							await User.findByIdAndUpdate(userExists._id, {
+								isEmailVerified: true
+							})
+						} else if (userObj.mobile) {
+							await User.findByIdAndUpdate(userExists._id, {
+								isMobileVerified: true
+							})
+						}
+					} else {
+						return response.errorResponse({
+							...errorData.BAD_REQUEST,
+							message: "Invalid OTP"
+						})
+					}
 				} else {
 					return response.errorResponse({
 						...errorData.BAD_REQUEST,
@@ -249,7 +305,21 @@ class AuthController {
 	) {
 		try {
 			const response = new ApiResponse(res)
-			const {email, otp, password}: ResetPasswordPayload = req.body
+			const {userName, otp, password}: ResetPasswordPayload = req.body
+			let userObj: any = {}
+
+			const verifyUserName = await diagnoseUserName(userName)
+
+			if (verifyUserName.email) {
+				userObj.email = userName
+			} else if (verifyUserName.mobile) {
+				userObj.mobile = userName
+			} else {
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "Invalid user-name"
+				})
+			}
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
@@ -270,7 +340,7 @@ class AuthController {
 
 			// check if otp is valid
 			const userExists = await User.findOne({
-				email,
+				...userObj,
 				isDeleted: false,
 				isActive: true
 			})
@@ -281,7 +351,7 @@ class AuthController {
 				})
 			}
 
-			// varify otp data
+			// verify otp data
 			if (userExists.secretCode) {
 				const decryptedData = await decryptBycrypto(
 					userExists.secretCode
@@ -295,10 +365,27 @@ class AuthController {
 					Number(otpData.otp) === Number(otp) &&
 					moment(otpData.expireIn).diff(moment().format()) >= 0
 				) {
-					await User.findByIdAndUpdate(userExists._id, {
-						password: encryptPassword,
-						isVerified: true
-					})
+					if (
+						otpData.verificationType.toString().trim() ===
+						userName.toString().trim()
+					) {
+						if (userObj.email) {
+							await User.findByIdAndUpdate(userExists._id, {
+								password: encryptPassword,
+								isEmailVerified: true
+							})
+						} else if (userObj.mobile) {
+							await User.findByIdAndUpdate(userExists._id, {
+								password: encryptPassword,
+								isMobileVerified: true
+							})
+						}
+					} else {
+						return response.errorResponse({
+							...errorData.BAD_REQUEST,
+							message: "Invalid OTP"
+						})
+					}
 				} else {
 					return response.errorResponse({
 						...errorData.BAD_REQUEST,
@@ -321,17 +408,33 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 			const inputData: SignInPayload = req.body
+			let userObj: any = {}
+			let verificationObj: any = {}
+
+			const verifyUserName = await diagnoseUserName(inputData.userName)
+
+			if (verifyUserName.email) {
+				userObj.email = inputData.userName
+				verificationObj.isEmailVerified = true
+			} else if (verifyUserName.mobile) {
+				userObj.mobile = inputData.userName
+				verificationObj.isMobileVerified = true
+			} else {
+				return response.errorResponse({
+					...errorData.NOT_FOUND,
+					message: "Invalid user-name"
+				})
+			}
 
 			const dbConnection = new DbConnection(req.headers.slug as string)
 			const User = await dbConnection.getModel(userSchema, "User")
 
 			//check if user exist
 			const userExists = await User.findOne({
-				email: inputData.email,
-				roleId: inputData.roleId,
+				...userObj,
 				isDeleted: false,
 				isActive: true,
-				isVerified: true
+				...verificationObj
 			})
 			if (!userExists) {
 				return response.errorResponse({

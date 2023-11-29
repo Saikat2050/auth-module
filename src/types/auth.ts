@@ -1,20 +1,18 @@
 export enum Role {
-	SUPER_ADMIN = 1,
-	FREELANCER = 2,
-	CLIENT = 3
+	SUPER_ADMIN = "super-admin",
+	ADMIN = "admin"
 }
 
 export type SignInPayload = {
-	email: string
-	roleId: number
+	userName: string
 	password: string
 }
 
 export type RegisterPayload = {
 	name: string
 	email: string
-	roleId: number
-	mobile?: string
+	roleId: string
+	mobile: string
 	password: string
 	dob?: string
 	address?: string
@@ -25,21 +23,22 @@ export type RegisterPayload = {
 }
 
 export type SendOtpPayload = {
-	email: string
+	userName: string
 }
 
 export type ResetPasswordPayload = {
-	email: string
+	userName: string
 	otp: string
 	password: string
 }
 
 export type verifyOtpPayload = {
-	email: string
+	userName: string
 	otp: string
 }
 
 export type secretCodeSchema = {
 	otp: string
 	expireIn: string
+	verificationType: string
 }

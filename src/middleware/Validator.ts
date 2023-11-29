@@ -1,11 +1,14 @@
 import {Request, Response, NextFunction} from "express"
 import jwt from "jsonwebtoken"
 const Ajv = require("ajv")
+import mongoose from "mongoose"
+
 import userSchema from "../models/users"
+import roleSchema from "../models/roles"
 import {DbConnection} from "../lib/DbConnection"
 import SlugValidation from "./SlugValidation"
-import BlackList from "../models/blackList"
-import {Role} from "../types/auth"
+import blackListSchema from "../models/blackList"
+import {Role as RoleEnum} from "../types/auth"
 
 // import schemas from "../../schema/cache.json"
 const schemas = require("../../schema/cache.json")
@@ -95,15 +98,15 @@ class Validator {
 			}
 
 			const slug: string = req.headers.slug as string
-			const client = await SlugValidation.getClient()
-
-			const userBlackList = await BlackList.findOne({
-				userId,
-				slug
-			})
-
-			if (userBlackList) {
-				throw new Error("User is black-listed")
+			let client: any = null
+			try {
+				client = await SlugValidation.getClient()
+			} catch (err) {
+				next({
+					statusCode: 500,
+					code: `internal_server_error`,
+					message: err?.toString()
+				})
 			}
 
 			const slugName: string = `${slug}:${userId}`
@@ -117,11 +120,24 @@ class Validator {
 
 			if (!userDetails) {
 				const dbConnection = new DbConnection(slug)
+				const BlackList = await dbConnection.getModel(
+					blackListSchema,
+					"BlackList"
+				)
+				const userBlackList = await BlackList.findOne({
+					userId: new mongoose.Types.ObjectId(userId),
+					isDeleted: false
+				})
+
+				if (userBlackList) {
+					throw new Error("User is black-listed")
+				}
+
 				const User = await dbConnection.getModel(userSchema, "User")
 
 				let userExist = await User.findById(userId)
 
-				if (!userExist) {
+				if (!userExist || Boolean(userExist?.isDeleted) === true) {
 					throw new Error("User does not exist")
 				}
 
@@ -134,11 +150,13 @@ class Validator {
 
 				await client.hSet(slugName, {
 					_id: userExist._id.toString().trim(),
-					roleId: userExist.roleId.toString().trim(),
+					roleId: JSON.stringify(userExist.roleId).toString().trim(),
 					name: userExist.name.toString().trim(),
 					email: userExist.email.toString().trim(),
 					mobile: userExist.mobile.toString().trim(),
-					isVerified: userExist.isVerified.toString().trim(),
+					isEmailVerified: userExist.isEmailVerified
+						.toString()
+						.trim(),
 					isActive: userExist.isActive.toString().trim()
 				})
 
@@ -169,10 +187,21 @@ class Validator {
 		res: Response,
 		next: NextFunction
 	) {
-		const roleId: number = Number(req.headers.roleId as string)
+		let roleId: string | undefined = req.headers.roleId as string
 		const reqUrl: string = req.url
 		const reqMethod: string = req.method
 		let isPermissionRequired: boolean = false
+
+		if (
+			(roleId || "").toString().trim() !== "" &&
+			typeof JSON.parse(roleId) === "object"
+		) {
+			roleId = JSON.parse(roleId)[0]
+		}
+
+		if ((roleId || "").toString().trim() === "") {
+			roleId = undefined
+		}
 
 		for (let i = 0; i < reservedApi.length; i++) {
 			if (
@@ -189,7 +218,15 @@ class Validator {
 		}
 
 		// validate roleId
-		if (isNaN(roleId) || Number(roleId) !== Role.SUPER_ADMIN) {
+		const dbConnection = new DbConnection(req.headers.slug as string)
+		const Role = await dbConnection.getModel(roleSchema, "Role")
+		const roleDetails = await Role.findById(roleId)
+
+		if (
+			!roleId ||
+			!roleDetails ||
+			roleDetails.slug.toString().trim() !== RoleEnum.SUPER_ADMIN
+		) {
 			return next({
 				statusCode: 403,
 				message: "Forbidden request"

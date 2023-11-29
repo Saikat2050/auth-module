@@ -1,0 +1,37 @@
+[
+    {
+        "type": "INSERT",
+        "document": "Role",
+        "value": [
+            {
+                "title": "Super Admin",
+                "slug": "super-admin"
+            }
+        ],
+        "unique": "slug"
+    },
+    {
+        "type": "INSERT",
+        "document": "User",
+        "value": [
+            {
+                "name": "Super Admin",
+                "email": "super-admin-sad@mailinator.com",
+                "mobile": "0000000001",
+                "password": "$2b$10$iM8H04rsc1rwUjFVQLhZiuTxLD/3MILV3DHVEQ.pa0VYYTvt5Fi2i",
+                "isEmailVerified": true,
+                "isMobileVerified": true
+            }
+        ],
+        "link" : [
+            {
+                "key": "roleId",
+                "document": "Role",
+                "filter": {
+                    "slug" :"super-admin"
+                }
+            }
+        ],
+        "unique": "email"
+    }
+]
