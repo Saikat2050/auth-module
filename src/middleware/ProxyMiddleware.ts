@@ -1,7 +1,7 @@
 import express, {Request, Response, NextFunction} from "express"
 import axios, {AxiosRequestConfig} from "axios"
 import eventEmitter from "../lib/logging"
-import { ApiResponse } from "../helpers/ApiResponse"
+import {ApiResponse} from "../helpers/ApiResponse"
 
 class ProxyMiddleware {
 	constructor() {}
@@ -12,9 +12,9 @@ class ProxyMiddleware {
 		next: NextFunction
 	) {
 		const envVariableName: string | undefined = req.headers.slug
-				?.toString()
-				.trim()
-				.toUpperCase()
+			?.toString()
+			.trim()
+			.toUpperCase()
 
 		const proxyRoute: string | undefined = process.env[`${envVariableName}`]
 
@@ -31,21 +31,21 @@ class ProxyMiddleware {
 			params: req.params,
 			data: req.body,
 			timeout: 10000,
-			responseType: 'json'
+			responseType: "json"
 		}
 
 		const response = new ApiResponse(res)
 		try {
 			const {data} = await axios(requestObject)
-			
+
 			return response.successResponse(data)
-		} catch(err: any) {
+		} catch (err: any) {
 			if (err.response) {
 				return response.errorResponse({
 					...err.response.data,
 					statusCode: err.response.status
 				})
-			  }
+			}
 			return next()
 		}
 	}
