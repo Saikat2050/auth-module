@@ -1,6 +1,6 @@
 {
   "/v1/auth": {
-    "hash": "16ab1b646b001724ec6d8049aa8660694640f862",
+    "hash": "39009d75094ab9e93b4e3b30b4e3990a3db3808f",
     "schemas": {
       "/v1/auth/register": {
         "type": "object",
@@ -120,7 +120,7 @@
     }
   },
   "/v1/user": {
-    "hash": "fa48283c4b3757d305c94166577c6cdb411be26f",
+    "hash": "28aab2cb86ca32e21ad4ed249ef39092ee08f39c",
     "schemas": {
       "/v1/user/update": {
         "additionalProperties": false,
@@ -300,7 +300,7 @@
     }
   },
   "/v1/black-list": {
-    "hash": "b709daedd3ecb59946dd5963e50ab00e9dfee296",
+    "hash": "5ee5072a09c84248bca186ce0e95cc46da1d73fb",
     "schemas": {
       "/v1/black-list/create": {
         "type": "object",
@@ -462,7 +462,7 @@
     }
   },
   "/v1/role": {
-    "hash": "825f4d84a7d8661dcef11648a80df0e1775e0cf0",
+    "hash": "1f14d1acb75f1f8569a84e84ee0bbc5bd2d6517d",
     "schemas": {
       "/v1/role/create": {
         "type": "object",
