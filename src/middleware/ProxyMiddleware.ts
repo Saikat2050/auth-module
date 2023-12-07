@@ -1,5 +1,7 @@
 import express, {Request, Response, NextFunction} from "express"
-const proxy = require("express-http-proxy")
+import axios, {AxiosRequestConfig} from "axios"
+import eventEmitter from "../lib/logging"
+import {ApiResponse} from "../helpers/ApiResponse"
 
 class ProxyMiddleware {
 	constructor() {}
@@ -9,30 +11,42 @@ class ProxyMiddleware {
 		res: Response,
 		next: NextFunction
 	) {
+		const envVariableName: string | undefined = req.headers.slug
+			?.toString()
+			.trim()
+			.toUpperCase()
+
+		const proxyRoute: string | undefined = process.env[`${envVariableName}`]
+
+		if ((proxyRoute || "").trim() === "") {
+			eventEmitter.emit("logging", "Invalid host name")
+			process.exit()
+		}
+
+		const requestObject: AxiosRequestConfig = {
+			url: req.originalUrl as string,
+			method: req.method as string,
+			baseURL: proxyRoute as string,
+			headers: req.headers,
+			params: req.params,
+			data: req.body,
+			timeout: 10000,
+			responseType: "json"
+		}
+
+		const response = new ApiResponse(res)
 		try {
-			const router = express.Router()
-			const envVariableName: string | undefined = req.headers.slug
-				?.toString()
-				.trim()
-				.toUpperCase()
+			const {data} = await axios(requestObject)
 
-			const proxyRoute = process.env[`${envVariableName}`]
-
-			console.log("saikat proxyRoute", proxyRoute)
-
-			router.use(
-				proxy(proxyRoute, {
-					proxyReqPathResolver: function (req: Request) {
-						return req.originalUrl
-					}
+			return response.successResponse(data)
+		} catch (err: any) {
+			if (err.response) {
+				return response.errorResponse({
+					...err.response.data,
+					statusCode: err.response.status
 				})
-			)
-
-			console.log("saikat is getting ok")
-			next()
-		} catch (error) {
-			console.log("saikat is getting error", error)
-			next()
+			}
+			return next()
 		}
 	}
 }
